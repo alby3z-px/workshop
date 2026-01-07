@@ -4,52 +4,65 @@ A lightweight Streamlit app to capture product information and workshop notes ac
 
 ## Quick Start
 
-Pick the fastest path for your OS. The virtual environment (`.venv`) is not committed (by design), but the steps below create it automatically.
+Pick the fastest path for your setup. The app auto-creates `data/` and `uploads/` on first run.
 
-### macOS/Linux — copy/paste and go
+### Option A — uv (fastest, no manual venv)
+
+If you don't have `uv` yet:
+
+macOS/Linux:
 
 ```bash
-python3 -m venv .venv \
-	&& source .venv/bin/activate \
-	&& python3 -m pip install -r requirements.txt \
-	&& streamlit run app.py
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Windows (PowerShell)
+Windows (PowerShell):
 
 ```powershell
-python -m venv .venv; 
-. .\.venv\Scripts\Activate.ps1; 
-python -m pip install -r requirements.txt; 
+irm https://astral.sh/uv/install.ps1 | iex
+```
+
+Run the app (reads dependencies from pyproject.toml):
+
+```bash
+uv sync
+uv run streamlit run app.py
+```
+
+Notes:
+- `uv sync` creates/updates a local environment from `pyproject.toml`.
+- `uv run` executes in that environment; no activation needed.
+
+### Option B — Conda
+
+Create and activate an environment, then use pip inside it:
+
+```bash
+conda create -n workshop python=3.12 -y
+conda activate workshop
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-On first run, the app creates the `data/` and `uploads/` folders and initializes the aggregated store.
+Tip: Using mamba? Replace `conda create` with `mamba create`.
 
-### Manual steps (if you prefer)
+### Option C — Python venv (manual)
 
-1) Create and activate a virtual environment (macOS/Linux)
+macOS/Linux:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+streamlit run app.py
 ```
 
-On Windows (PowerShell):
+Windows (PowerShell):
 
 ```powershell
+python -m venv .venv
 . .\.venv\Scripts\Activate.ps1
-```
-
-2) Install dependencies
-
-```bash
-python3 -m pip install -r requirements.txt
-```
-
-3) Run the app
-
-```bash
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
@@ -114,6 +127,7 @@ streamlit run app.py
 - CSV not detected: ensure the file path and name match exactly under uploads/.
 - Permission or write errors: verify the app has write access to the data/ directory.
 - Virtual environment issues: re-create the venv and reinstall requirements.
-- `python3` not found on macOS: install Python 3 (e.g., `brew install python@3.12`) and re-run the steps.
-	- If `brew` is not installed: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- Why `.venv` isn’t in the repo: virtualenvs are OS/architecture-specific and large; recreating from `requirements.txt` is reliable and quick.
+- `uv` not found: install via the commands above.
+- `conda` not found: install Miniconda/Anaconda, or use Mambaforge.
+- `python3` not found on macOS: install Python 3 (e.g., `brew install python@3.12`). If Homebrew is missing: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+- Why `.venv` isn’t in the repo: virtualenvs are OS/architecture-specific and large; recreating from `pyproject.toml`/`requirements.txt` is reliable and quick.

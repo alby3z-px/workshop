@@ -75,7 +75,7 @@ streamlit run app.py
 
 ### Import Products from CSV
 
-- A starter catalog CSV ships with the app at uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv. Use it on first run to pre-populate products and owners.
+- A starter catalog CSV ships with the app at `uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv`. Use it on first run to pre-populate products and owners. This file is an export of the product catalogue table from Notion: https://www.notion.so/2c34aca9ecb38075ab7fcdbec29ce503?v=2c34aca9ecb380c0adcf000ceef5cf46&source=copy_link
 - Click “Import from CSV” in the sidebar. The importer creates missing products and pre-fills Business Owners’ product lists.
 
 ### Products Page
@@ -91,12 +91,7 @@ streamlit run app.py
 
 ### Product Operator/Developer Session
 
-- Organized into expanders that mirror the workshop structure:
-	- Part 1: Developer’s Product Overview
-	- Part 2: Development Deep-Dive (technical stack, practices, challenges)
-	- Part 3: Operation Deep-Dive (usage, pain points, gaps)
-	- Part 4: Data & Integration (inputs, outputs, storage, integrations)
-	- Part 5: Wrap-Up (maturity sliders, notes, quotes)
+- High-level, structured capture across five areas: overview, development, operations, data/integrations, and wrap-up.
 - Quotes field format: one per line as `Speaker | timestamp | quote`.
 - Click “Save Technical session” to persist changes.
 
@@ -117,17 +112,4 @@ streamlit run app.py
 - Saves are deep-merged to preserve nested structures. No timestamp fields are stored.
 - After saves, the UI refreshes automatically.
 
-## Configuration Notes
-
-- CSV path is defined as PRODUCT_CATALOG_FILE in app.py. Update it if your file name or location differs.
-- Dependencies are listed in pyproject.toml and requirements.txt; Streamlit and Pandas are the only runtime libraries.
-
-## Troubleshooting
-
-- CSV not detected: ensure the file path and name match exactly under uploads/.
-- Permission or write errors: verify the app has write access to the data/ directory.
-- Virtual environment issues: re-create the venv and reinstall requirements.
-- `uv` not found: install via the commands above.
-- `conda` not found: install Miniconda/Anaconda, or use Mambaforge.
-- `python3` not found on macOS: install Python 3 (e.g., `brew install python@3.12`). If Homebrew is missing: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- Why `.venv` isn’t in the repo: virtualenvs are OS/architecture-specific and large; recreating from `pyproject.toml`/`requirements.txt` is reliable and quick.
+ 

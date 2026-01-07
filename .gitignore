@@ -1,6 +1,5 @@
 # Ignore data and uploads by default
 /data/
-/uploads/
 
 # Python cache
 __pycache__/

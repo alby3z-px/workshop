@@ -30,8 +30,8 @@ These project-specific notes help AI coding agents work productively in this cod
   - "Export Backup": download/restore the full aggregated JSON.
 - Note: There is a second "Products" block later in [app.py](app.py) that appears vestigial; the first "Products" implementation is the active one.
 
-## CSV Import
-- Catalog file path is fixed: [uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv](uploads/Product%20Catalog%202c34aca9ecb38075ab7fcdbec29ce503.csv).
+-## CSV Import
+- Catalog file path is fixed: [uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv](uploads/Product%20Catalog%202c34aca9ecb38075ab7fcdbec29ce503.csv). A starter copy ships with the repo; use it on first run to pre-populate.
 - `load_products_from_csv()` expectations:
   - Skips header and empty rows; ignores platform rows where name contains "Platform" and column 2 is "N/A".
   - Uses specific indices: 0 `product_name`, 1 `workstream`, 3 `business_owner`, 4 `existing_users`, 6 `primary_operator`, 10 `primary_developer`.
@@ -41,7 +41,7 @@ These project-specific notes help AI coding agents work productively in this cod
 
 ## Conventions & Patterns
 - IDs: `product_id` is `slugify(product_name)`; persist it on save.
-- Writes: Always use `save_product_data()` / `save_business_owner_data()` so timestamps and deep-merge semantics are preserved.
+- Writes: Always use `save_product_data()` / `save_business_owner_data()` so deep-merge semantics are preserved. No timestamp fields are stored.
 - UI state: After saves, call `st.rerun()` to refresh the page.
 - Quotes input: one quote per line using `Speaker | timestamp | quote`; parsed into list objects at save time.
 - Colors: business owner chips use `get_owner_color(owner_name)` for consistent color mapping.

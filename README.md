@@ -35,8 +35,8 @@ On first run, the app creates the `data/` and `uploads/` folders and initializes
 
 ### Import Products from CSV
 
-- Place the catalog at uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv, then click “Import from CSV” in the sidebar.
-- The importer creates missing products and pre-fills Business Owners’ product lists.
+- A starter catalog CSV ships with the app at uploads/Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv. Use it on first run to pre-populate products and owners.
+- Click “Import from CSV” in the sidebar. The importer creates missing products and pre-fills Business Owners’ product lists.
 
 ### Products Page
 
@@ -74,7 +74,7 @@ On first run, the app creates the `data/` and `uploads/` folders and initializes
 
 - Single data file: data/aggregated.json (auto-created). Do not hand-edit while the app is running.
 - Product IDs: derived via slugify(product_name) to ensure stable keys.
-- Saves are deep-merged to preserve nested structures; each save updates `last_updated`.
+- Saves are deep-merged to preserve nested structures. No timestamp fields are stored.
 - After saves, the UI refreshes automatically.
 
 ## Configuration Notes

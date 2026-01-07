@@ -180,8 +180,7 @@ def get_empty_product_template():
             "top_pain_points": ""
         },
         
-        # Timestamps
-        "last_updated": ""
+        # No timestamps persisted
     }
 
 
@@ -335,7 +334,7 @@ def get_empty_business_owner_template():
             "summary_ensure_understanding": ""
         },
         
-        "last_updated": ""
+        
     }
 
 
@@ -359,7 +358,6 @@ def save_product_data(product_id, product_data):
     
     # Deep merge to preserve nested structures
     deep_merge(aggregated["products"][product_id], product_data)
-    aggregated["products"][product_id]["last_updated"] = str(datetime.now(timezone.utc))
     
     save_aggregated_data(aggregated)
 
@@ -374,7 +372,6 @@ def save_business_owner_data(owner_name, owner_data):
     
     # Update all fields from owner_data
     aggregated["business_owners"][owner_name].update(owner_data)
-    aggregated["business_owners"][owner_name]["last_updated"] = str(datetime.now(timezone.utc))
     
     save_aggregated_data(aggregated)
 
@@ -386,10 +383,27 @@ def load_products():
     
     for pid, prod_data in aggregated.get("products", {}).items():
         product = dict(prod_data)  # Copy all fields directly
-        product["latest_date"] = prod_data.get("last_updated")
         products.append(product)
     
     return products
+
+
+def migrate_remove_last_updated():
+    """Remove deprecated 'last_updated' fields from aggregated.json if present."""
+    data = load_aggregated_data()
+    changed = False
+    # Clean products
+    for pid, prod in list(data.get("products", {}).items()):
+        if isinstance(prod, dict) and "last_updated" in prod:
+            del prod["last_updated"]
+            changed = True
+    # Clean business owners
+    for owner, bo in list(data.get("business_owners", {}).items()):
+        if isinstance(bo, dict) and "last_updated" in bo:
+            del bo["last_updated"]
+            changed = True
+    if changed:
+        save_aggregated_data(data)
 
 
 def load_products_from_csv():
@@ -509,6 +523,8 @@ def get_business_owner_data(owner_name):
 
 def main():
     ensure_dirs()
+    # Migrate existing data to remove deprecated fields
+    migrate_remove_last_updated()
 
     st.title("Workshop Product Page Editor")
     st.sidebar.header("Navigation")
@@ -1449,7 +1465,7 @@ def main():
             for p in displayed:
                 cols = st.columns([1, 5, 2, 1])
                 cols[0].write(p.get('product_id'))
-                cols[1].write(f"**{p.get('product_name')}**\nLatest: {p.get('latest_date')}")
+                cols[1].write(f"**{p.get('product_name')}**")
                 if cols[2].button("View", key=f"view-{p.get('product_id')}"):
                     st.session_state['selected_product'] = p.get('product_id')
                     # move to Edit mode so the Create/Edit form is shown
@@ -1472,7 +1488,7 @@ def main():
                     st.write(f"**Workstream:** {product_data.get('workstream', 'N/A')}")
                     st.write(f"**Primary Operator:** {product_data.get('primary_operator', 'N/A')}")
                     st.write(f"**Primary Developer:** {product_data.get('primary_developer', 'N/A')}")
-                    st.write(f"**Last Updated:** {product_data.get('last_updated', 'N/A')}")
+                    # No timestamp stored
                     
                     st.download_button("Download Product JSON", json.dumps(product_data, indent=2), file_name=f"{selected_pid}-data.json")
                 else:

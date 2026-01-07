@@ -7,3 +7,15 @@ __pycache__/
 
 # Streamlit cache
 .streamlit/
+
+# Virtual environments (not committed)
+.venv/
+venv/
+env/
+list/
+
+# macOS
+.DS_Store
+
+# Misc
+.python-version

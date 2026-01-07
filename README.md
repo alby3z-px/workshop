@@ -4,18 +4,47 @@ A lightweight Streamlit app to capture product information and workshop notes ac
 
 ## Quick Start
 
-1) Create and activate a virtual environment
+Pick the fastest path for your OS. The virtual environment (`.venv`) is not committed (by design), but the steps below create it automatically.
+
+### macOS/Linux — copy/paste and go
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # macOS/Linux
-# On Windows (PowerShell): .venv\Scripts\Activate.ps1
+python3 -m venv .venv \
+	&& source .venv/bin/activate \
+	&& python3 -m pip install -r requirements.txt \
+	&& streamlit run app.py
+```
+
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv; 
+. .\.venv\Scripts\Activate.ps1; 
+python -m pip install -r requirements.txt; 
+streamlit run app.py
+```
+
+On first run, the app creates the `data/` and `uploads/` folders and initializes the aggregated store.
+
+### Manual steps (if you prefer)
+
+1) Create and activate a virtual environment (macOS/Linux)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows (PowerShell):
+
+```powershell
+. .\.venv\Scripts\Activate.ps1
 ```
 
 2) Install dependencies
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 3) Run the app
@@ -23,8 +52,6 @@ pip install -r requirements.txt
 ```bash
 streamlit run app.py
 ```
-
-On first run, the app creates the `data/` and `uploads/` folders and initializes the aggregated store.
 
 ## Using the App
 
@@ -87,3 +114,6 @@ On first run, the app creates the `data/` and `uploads/` folders and initializes
 - CSV not detected: ensure the file path and name match exactly under uploads/.
 - Permission or write errors: verify the app has write access to the data/ directory.
 - Virtual environment issues: re-create the venv and reinstall requirements.
+- `python3` not found on macOS: install Python 3 (e.g., `brew install python@3.12`) and re-run the steps.
+	- If `brew` is not installed: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+- Why `.venv` isn’t in the repo: virtualenvs are OS/architecture-specific and large; recreating from `requirements.txt` is reliable and quick.

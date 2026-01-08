@@ -179,6 +179,148 @@ def get_empty_product_template():
             "dev_practices": "",
             "top_pain_points": ""
         },
+
+        # Business Owner / User session per product
+        "business_owner_session": {
+            "part1_context_business_process": {
+                "context_role": "",
+                "context_stages": "",
+                "context_decisions": "",
+                "context_deliverables": "",
+                "context_workflow": "",
+                "context_steps": "",
+                "context_info_needed": "",
+                "context_decision_points": "",
+                "context_partner_impact": "",
+                "context_partner_confidence": "",
+                "context_partner_frustration": ""
+            },
+            "part2_product_portfolio_review": {
+                "section_a_business_owner": {
+                    "product_purpose": "",
+                    "product_why_created": "",
+                    "product_what_achieve": "",
+                    "product_impact_works_well": "",
+                    "product_impact_doesnt_work": "",
+                    "product_time_impact": "",
+                    "product_quality_decisions": "",
+                    "product_partner_confidence": ""
+                },
+                "section_b_users": {
+                    "b1_use_overview": {
+                        "use_purpose": "",
+                        "use_frequency": "",
+                        "use_who_else": "",
+                        "use_workflow_stage": "",
+                        "use_critical_path": "",
+                        "use_decisions": "",
+                        "use_decision_explanation": "",
+                        "use_critical_decisions": "",
+                        "use_confidence_outputs": "",
+                        "use_decisions_without_product": "",
+                        "use_why_not_direct": ""
+                    },
+                    "b2_pain_points_gaps": {
+                        "pain_frustrations": "",
+                        "pain_slowdowns": "",
+                        "pain_extra_work": "",
+                        "pain_rework_errors": "",
+                        "pain_unsupported_needs": "",
+                        "pain_content_quality": "",
+                        "pain_timeline": "",
+                        "pain_usability": "",
+                        "pain_missing_info": "",
+                        "pain_missing_decisions": "",
+                        "pain_manual_work": "",
+                        "pain_workarounds": "",
+                        "pain_time_added": "",
+                        "pain_why_necessary": ""
+                    }
+                }
+            },
+            "part3_cross_product_process": {
+                "section_a_integration": {
+                    "integration_products_work_together": "",
+                    "integration_manual_data_movement": "",
+                    "integration_gaps": "",
+                    "integration_combine_info": "",
+                    "integration_how_combine": "",
+                    "integration_time_to_combine": "",
+                    "integration_error_prone": "",
+                    "integration_outside_products": "",
+                    "integration_outside_fit": ""
+                },
+                "section_b_bottlenecks": {
+                    "bottleneck_where_slows": "",
+                    "bottleneck_waiting_info": "",
+                    "bottleneck_manual_steps": "",
+                    "bottleneck_rework": "",
+                    "bottleneck_handoffs": "",
+                    "bottleneck_takes_longer": "",
+                    "bottleneck_why_long": "",
+                    "bottleneck_faster_look_like": "",
+                    "bottleneck_partner_delays": "",
+                    "bottleneck_partner_waiting": "",
+                    "bottleneck_partner_frustrations": ""
+                }
+            },
+            "part4_partner_delivery": {
+                "section_a_info_needs": {
+                    "partner_info_needs": "",
+                    "partner_info_frequency": "",
+                    "partner_info_format": "",
+                    "partner_delivery_method": "",
+                    "partner_delivery_time": "",
+                    "partner_delivery_automated": "",
+                    "partner_value_cant_provide": ""
+                },
+                "section_b_confidence_trust": {
+                    "partner_confidence_builders": "",
+                    "partner_concerns": "",
+                    "partner_demonstrate_data_led": ""
+                }
+            },
+            "part5_ideal_future_state": {
+                "section_a_prioritization": {
+                    "priority_biggest_impact": "",
+                    "priority_why": "",
+                    "priority_impact_detail": "",
+                    "priority_frequency": "",
+                    "priority_prevents_faster": "",
+                    "priority_partner_difference": ""
+                },
+                "section_b_vision": {
+                    "vision_day_to_day": "",
+                    "vision_can_do_new": "",
+                    "vision_decisions_faster": "",
+                    "vision_partner_delivery_changed": "",
+                    "vision_information_access": "",
+                    "vision_questions_answer": "",
+                    "vision_answer_speed": "",
+                    "vision_information_confidence": "",
+                    "vision_workflow_changed": "",
+                    "vision_manual_steps_gone": "",
+                    "vision_whats_faster": "",
+                    "vision_whats_easier": "",
+                    "vision_whats_reliable": "",
+                    "vision_partner_experience_faster": "",
+                    "vision_partner_confidence": "",
+                    "vision_partner_access": ""
+                },
+                "section_c_capabilities": {
+                    "capability_requirements": "",
+                    "capability_fast_enough": "",
+                    "capability_quality_requirements": ""
+                }
+            },
+            "part6_wrapup": {
+                "summary_validation": "",
+                "summary_missed": "",
+                "summary_most_important": "",
+                "summary_critical_not_discussed": "",
+                "summary_ensure_understanding": ""
+            }
+        },
         
         # No timestamps persisted
     }
@@ -600,25 +742,30 @@ def main():
                 st.info("No products found yet. Use 'Add Product' to create one.")
             else:
                 # Column headers
-                header_cols = st.columns([4, 3, 1, 1])
+                header_cols = st.columns([4, 3, 1, 1, 1])
                 header_cols[0].write("**Product Name**")
                 header_cols[1].write("**Business Owner**")
-                header_cols[2].write("")
-                header_cols[3].write("")
+                header_cols[2].write("**Operator/Dev**")
+                header_cols[3].write("**BO/User**")
+                header_cols[4].write("")
                 
                 for p in valid_products:
                     owner = p.get('business_owner', 'Unknown')
                     bg_color = get_owner_color(owner)
                     
                     # Create row with background color on business owner cell
-                    cols = st.columns([4, 3, 1, 1])
+                    cols = st.columns([4, 3, 1, 1, 1])
                     cols[0].write(p.get("product_name"))
                     cols[1].markdown(f'<div style="background-color: {bg_color}; color: white; padding: 8px; border-radius: 5px;">{owner}</div>', unsafe_allow_html=True)
                     if cols[2].button("Edit", key=f"edit-{p.get('product_id')}"):
                         st.session_state['editing_product'] = p.get('product_id')
                         st.session_state['page'] = 'Product Operator/Developer Session'
                         st.rerun()
-                    if cols[3].button("Delete", key=f"delete-{p.get('product_id')}"):
+                    if cols[3].button("Edit", key=f"edit-bo-{p.get('product_id')}"):
+                        st.session_state['editing_product'] = p.get('product_id')
+                        st.session_state['page'] = 'Product Business Owner Session'
+                        st.rerun()
+                    if cols[4].button("Delete", key=f"delete-{p.get('product_id')}"):
                         st.session_state['delete_product_id'] = p.get('product_id')
                         st.session_state['show_delete_confirm'] = True
                         st.rerun()
@@ -1060,6 +1207,333 @@ def main():
         # Render only Technical form
         with st.expander("Technical Session (Operator/Developer)", expanded=True):
             render_technical_form(existing)
+
+    elif page == 'Product Business Owner Session':
+        editing_pid = st.session_state.get('editing_product')
+        if not editing_pid:
+            st.warning("No product selected for editing. Please select a product from the Products page.")
+            if st.button("Go to Products"):
+                st.session_state['page'] = 'Products'
+                st.rerun()
+            return
+        products = load_products()
+        product_data = get_product_data(editing_pid)
+        product_info = next((p for p in products if p.get('product_id') == editing_pid), None)
+        if not product_data and not product_info:
+            st.error("Selected product not found. Please select another product.")
+            if st.button("Go to Products"):
+                st.session_state['page'] = 'Products'
+                st.session_state['editing_product'] = None
+                st.rerun()
+            return
+        display_info = {}
+        if product_info:
+            display_info = dict(product_info)
+        if product_data:
+            display_info.update({k: v for k, v in product_data.items() if v})
+
+        st.subheader("Business Owner / User Session (Per Product)")
+        st.markdown(f"### {display_info.get('product_name', editing_pid)}")
+
+        existing_bo = (product_data or {}).get('business_owner_session', {})
+
+        # Build BO form mirroring the owner-level session, but saved under the product
+        with st.form(f"bo-session-{editing_pid}"):
+            part1 = existing_bo.get('part1_context_business_process', {})
+            part2 = existing_bo.get('part2_product_portfolio_review', {})
+            part2a = part2.get('section_a_business_owner', {})
+            part2b = part2.get('section_b_users', {})
+            part2b1 = part2b.get('b1_use_overview', {})
+            part2b2 = part2b.get('b2_pain_points_gaps', {})
+            part3 = existing_bo.get('part3_cross_product_process', {})
+            part3a = part3.get('section_a_integration', {})
+            part3b = part3.get('section_b_bottlenecks', {})
+            part4 = existing_bo.get('part4_partner_delivery', {})
+            part4a = part4.get('section_a_info_needs', {})
+            part4b = part4.get('section_b_confidence_trust', {})
+            part5 = existing_bo.get('part5_ideal_future_state', {})
+            part5a = part5.get('section_a_prioritization', {})
+            part5b = part5.get('section_b_vision', {})
+            part5c = part5.get('section_c_capabilities', {})
+            part6 = existing_bo.get('part6_wrapup', {})
+
+            with st.expander("Part 1: Context & Business Process", expanded=False):
+                context_role = st.text_area("Role in delivery process", value=part1.get('context_role',''))
+                context_stages = st.text_area("Stages involved", value=part1.get('context_stages',''))
+                context_decisions = st.text_area("Decisions made", value=part1.get('context_decisions',''))
+                context_deliverables = st.text_area("Key deliverables", value=part1.get('context_deliverables',''))
+                context_workflow = st.text_area("Typical workflow/process", value=part1.get('context_workflow',''))
+                context_steps = st.text_area("Workflow steps", value=part1.get('context_steps',''))
+                context_info_needed = st.text_area("Information needed at each step", value=part1.get('context_info_needed',''))
+                context_decision_points = st.text_area("Decision points", value=part1.get('context_decision_points',''))
+                context_partner_impact = st.text_area("Impact on partner timeline", value=part1.get('context_partner_impact',''))
+                context_partner_confidence = st.text_area("What builds partner confidence", value=part1.get('context_partner_confidence',''))
+                context_partner_frustration = st.text_area("Where partners get frustrated", value=part1.get('context_partner_frustration',''))
+
+            with st.expander("Part 2: Product Portfolio Review", expanded=False):
+                st.markdown("**Section A: Business Owner**")
+                product_purpose = st.text_area("Purpose of this product", value=part2a.get('product_purpose',''))
+                product_why_created = st.text_area("Why was it created?", value=part2a.get('product_why_created',''))
+                product_what_achieve = st.text_area("What is it used to achieve?", value=part2a.get('product_what_achieve',''))
+                product_impact_works_well = st.text_area("Impact when it works well", value=part2a.get('product_impact_works_well',''))
+                product_impact_doesnt_work = st.text_area("Impact when it doesn't", value=part2a.get('product_impact_doesnt_work',''))
+                product_time_impact = st.text_area("Time saved/lost", value=part2a.get('product_time_impact',''))
+                product_quality_decisions = st.text_area("Quality of decisions", value=part2a.get('product_quality_decisions',''))
+                product_partner_confidence = st.text_area("Partner confidence", value=part2a.get('product_partner_confidence',''))
+
+                st.markdown("---")
+                st.markdown("**Section B: Users - Use Overview**")
+                use_purpose = st.text_area("What do users use this for?", value=part2b1.get('use_purpose',''))
+                use_frequency = st.text_area("How often?", value=part2b1.get('use_frequency',''))
+                use_who_else = st.text_area("Who else uses it?", value=part2b1.get('use_who_else',''))
+                use_workflow_stage = st.text_area("Workflow stage", value=part2b1.get('use_workflow_stage',''))
+                use_critical_path = st.text_area("Critical path or supporting?", value=part2b1.get('use_critical_path',''))
+                use_decisions = st.text_area("Decisions based on outputs", value=part2b1.get('use_decisions',''))
+                use_decision_explanation = st.text_area("How decisions are made", value=part2b1.get('use_decision_explanation',''))
+                use_critical_decisions = st.text_area("Are those critical?", value=part2b1.get('use_critical_decisions',''))
+                use_confidence_outputs = st.text_area("Confidence in outputs", value=part2b1.get('use_confidence_outputs',''))
+                use_decisions_without_product = st.text_area("Decisions without product & why", value=part2b1.get('use_decisions_without_product',''))
+                use_why_not_direct = st.text_area("Why not used directly?", value=part2b1.get('use_why_not_direct',''))
+
+                st.markdown("---")
+                st.markdown("**Section B: Users - Pain Points & Gaps**")
+                pain_frustrations = st.text_area("Frustrations", value=part2b2.get('pain_frustrations',''))
+                pain_slowdowns = st.text_area("Slowdowns", value=part2b2.get('pain_slowdowns',''))
+                pain_extra_work = st.text_area("Extra work", value=part2b2.get('pain_extra_work',''))
+                pain_rework_errors = st.text_area("Rework/errors", value=part2b2.get('pain_rework_errors',''))
+                pain_unsupported_needs = st.text_area("Unsupported needs", value=part2b2.get('pain_unsupported_needs',''))
+                pain_content_quality = st.text_area("Content/Quality issues", value=part2b2.get('pain_content_quality',''))
+                pain_timeline = st.text_area("Timeline too slow?", value=part2b2.get('pain_timeline',''))
+                pain_usability = st.text_area("Usability challenges", value=part2b2.get('pain_usability',''))
+                pain_missing_info = st.text_area("Missing information", value=part2b2.get('pain_missing_info',''))
+                pain_missing_decisions = st.text_area("Missing decision data", value=part2b2.get('pain_missing_decisions',''))
+                pain_manual_work = st.text_area("Manual work to automate", value=part2b2.get('pain_manual_work',''))
+                pain_workarounds = st.text_area("Workarounds", value=part2b2.get('pain_workarounds',''))
+                pain_time_added = st.text_area("Time added by workarounds", value=part2b2.get('pain_time_added',''))
+                pain_why_necessary = st.text_area("Why necessary", value=part2b2.get('pain_why_necessary',''))
+
+            with st.expander("Part 3: Cross-Product & Process View", expanded=False):
+                integration_products_work_together = st.text_area("How this works with other products", value=part3a.get('integration_products_work_together',''))
+                integration_manual_data_movement = st.text_area("Manual data movement", value=part3a.get('integration_manual_data_movement',''))
+                integration_gaps = st.text_area("Information gaps", value=part3a.get('integration_gaps',''))
+                integration_combine_info = st.text_area("Combining information needs", value=part3a.get('integration_combine_info',''))
+                integration_how_combine = st.text_area("How combine today", value=part3a.get('integration_how_combine',''))
+                integration_time_to_combine = st.text_area("Time to combine", value=part3a.get('integration_time_to_combine',''))
+                integration_error_prone = st.text_area("Error prone?", value=part3a.get('integration_error_prone',''))
+                integration_outside_products = st.text_area("Outside products/info also needed", value=part3a.get('integration_outside_products',''))
+                integration_outside_fit = st.text_area("How they fit", value=part3a.get('integration_outside_fit',''))
+
+                st.markdown("---")
+                bottleneck_where_slows = st.text_area("Where process slows", value=part3b.get('bottleneck_where_slows',''))
+                bottleneck_waiting_info = st.text_area("Waiting for information", value=part3b.get('bottleneck_waiting_info',''))
+                bottleneck_manual_steps = st.text_area("Manual steps", value=part3b.get('bottleneck_manual_steps',''))
+                bottleneck_rework = st.text_area("Rework due to errors", value=part3b.get('bottleneck_rework',''))
+                bottleneck_handoffs = st.text_area("Handoffs", value=part3b.get('bottleneck_handoffs',''))
+                bottleneck_takes_longer = st.text_area("What takes longer than it should", value=part3b.get('bottleneck_takes_longer',''))
+                bottleneck_why_long = st.text_area("Why it takes long", value=part3b.get('bottleneck_why_long',''))
+                bottleneck_faster_look_like = st.text_area("What would faster look like", value=part3b.get('bottleneck_faster_look_like',''))
+                bottleneck_partner_delays = st.text_area("Partner delays", value=part3b.get('bottleneck_partner_delays',''))
+                bottleneck_partner_waiting = st.text_area("Partner waiting on you", value=part3b.get('bottleneck_partner_waiting',''))
+                bottleneck_partner_frustrations = st.text_area("Partner frustrations", value=part3b.get('bottleneck_partner_frustrations',''))
+
+            with st.expander("Part 4: Partner Delivery & External Perspective", expanded=False):
+                partner_info_needs = st.text_area("Information partners need", value=part4a.get('partner_info_needs',''))
+                partner_info_frequency = st.text_area("How often", value=part4a.get('partner_info_frequency',''))
+                partner_info_format = st.text_area("Format", value=part4a.get('partner_info_format',''))
+                partner_delivery_method = st.text_area("Delivery method", value=part4a.get('partner_delivery_method',''))
+                partner_delivery_time = st.text_area("Prep time", value=part4a.get('partner_delivery_time',''))
+                partner_delivery_automated = st.text_area("Manual or automated", value=part4a.get('partner_delivery_automated',''))
+                partner_value_cant_provide = st.text_area("Valuable info you can't easily provide", value=part4a.get('partner_value_cant_provide',''))
+
+                st.markdown("---")
+                partner_confidence_builders = st.text_area("What builds partner confidence", value=part4b.get('partner_confidence_builders',''))
+                partner_concerns = st.text_area("Partner concerns/questions", value=part4b.get('partner_concerns',''))
+                partner_demonstrate_data_led = st.text_area("Better demonstrate 'data-led'", value=part4b.get('partner_demonstrate_data_led',''))
+
+            with st.expander("Part 5: Ideal Future State", expanded=False):
+                priority_biggest_impact = st.text_area("One improvement with biggest impact", value=part5a.get('priority_biggest_impact',''))
+                priority_why = st.text_area("Why", value=part5a.get('priority_why',''))
+                priority_impact_detail = st.text_area("Impact details", value=part5a.get('priority_impact_detail',''))
+                priority_frequency = st.text_area("How often would it help", value=part5a.get('priority_frequency',''))
+                priority_prevents_faster = st.text_area("What prevents faster delivery", value=part5a.get('priority_prevents_faster',''))
+                priority_partner_difference = st.text_area("Biggest difference to partner", value=part5a.get('priority_partner_difference',''))
+
+                st.markdown("---")
+                vision_day_to_day = st.text_area("Day-to-day work vision", value=part5b.get('vision_day_to_day',''))
+                vision_can_do_new = st.text_area("New capabilities vs today", value=part5b.get('vision_can_do_new',''))
+                vision_decisions_faster = st.text_area("Decisions faster/better", value=part5b.get('vision_decisions_faster',''))
+                vision_partner_delivery_changed = st.text_area("Partner delivery changed", value=part5b.get('vision_partner_delivery_changed',''))
+                vision_information_access = st.text_area("New information access", value=part5b.get('vision_information_access',''))
+                vision_questions_answer = st.text_area("Questions answerable", value=part5b.get('vision_questions_answer',''))
+                vision_answer_speed = st.text_area("Answer speed", value=part5b.get('vision_answer_speed',''))
+                vision_information_confidence = st.text_area("Information confidence", value=part5b.get('vision_information_confidence',''))
+                vision_workflow_changed = st.text_area("Workflow changes", value=part5b.get('vision_workflow_changed',''))
+                vision_manual_steps_gone = st.text_area("Manual steps gone", value=part5b.get('vision_manual_steps_gone',''))
+                vision_whats_faster = st.text_area("What's faster", value=part5b.get('vision_whats_faster',''))
+                vision_whats_easier = st.text_area("What's easier", value=part5b.get('vision_whats_easier',''))
+                vision_whats_reliable = st.text_area("What's more reliable", value=part5b.get('vision_whats_reliable',''))
+                vision_partner_experience_faster = st.text_area("Faster from partner perspective", value=part5b.get('vision_partner_experience_faster',''))
+                vision_partner_confidence = st.text_area("What builds their confidence", value=part5b.get('vision_partner_confidence',''))
+                vision_partner_access = st.text_area("Partner access improvements", value=part5b.get('vision_partner_access',''))
+
+                st.markdown("---")
+                capability_requirements = st.text_area("Predict platform capabilities needed", value=part5c.get('capability_requirements',''))
+                capability_fast_enough = st.text_area("What is 'fast enough'", value=part5c.get('capability_fast_enough',''))
+                capability_quality_requirements = st.text_area("What is 'good enough' quality", value=part5c.get('capability_quality_requirements',''))
+
+            with st.expander("Part 6: Wrap-Up", expanded=False):
+                summary_validation = st.text_area("Did we get that right?", value=part6.get('summary_validation',''))
+                summary_missed = st.text_area("What did we miss?", value=part6.get('summary_missed',''))
+                summary_most_important = st.text_area("What's most important?", value=part6.get('summary_most_important',''))
+                summary_critical_not_discussed = st.text_area("Anything critical not discussed?", value=part6.get('summary_critical_not_discussed',''))
+                summary_ensure_understanding = st.text_area("Anything to ensure we understand?", value=part6.get('summary_ensure_understanding',''))
+
+            submitted = st.form_submit_button("Save Business Owner session")
+            if submitted:
+                owner_session = {
+                    'part1_context_business_process': {
+                        'context_role': context_role,
+                        'context_stages': context_stages,
+                        'context_decisions': context_decisions,
+                        'context_deliverables': context_deliverables,
+                        'context_workflow': context_workflow,
+                        'context_steps': context_steps,
+                        'context_info_needed': context_info_needed,
+                        'context_decision_points': context_decision_points,
+                        'context_partner_impact': context_partner_impact,
+                        'context_partner_confidence': context_partner_confidence,
+                        'context_partner_frustration': context_partner_frustration,
+                    },
+                    'part2_product_portfolio_review': {
+                        'section_a_business_owner': {
+                            'product_purpose': product_purpose,
+                            'product_why_created': product_why_created,
+                            'product_what_achieve': product_what_achieve,
+                            'product_impact_works_well': product_impact_works_well,
+                            'product_impact_doesnt_work': product_impact_doesnt_work,
+                            'product_time_impact': product_time_impact,
+                            'product_quality_decisions': product_quality_decisions,
+                            'product_partner_confidence': product_partner_confidence,
+                        },
+                        'section_b_users': {
+                            'b1_use_overview': {
+                                'use_purpose': use_purpose,
+                                'use_frequency': use_frequency,
+                                'use_who_else': use_who_else,
+                                'use_workflow_stage': use_workflow_stage,
+                                'use_critical_path': use_critical_path,
+                                'use_decisions': use_decisions,
+                                'use_decision_explanation': use_decision_explanation,
+                                'use_critical_decisions': use_critical_decisions,
+                                'use_confidence_outputs': use_confidence_outputs,
+                                'use_decisions_without_product': use_decisions_without_product,
+                                'use_why_not_direct': use_why_not_direct,
+                            },
+                            'b2_pain_points_gaps': {
+                                'pain_frustrations': pain_frustrations,
+                                'pain_slowdowns': pain_slowdowns,
+                                'pain_extra_work': pain_extra_work,
+                                'pain_rework_errors': pain_rework_errors,
+                                'pain_unsupported_needs': pain_unsupported_needs,
+                                'pain_content_quality': pain_content_quality,
+                                'pain_timeline': pain_timeline,
+                                'pain_usability': pain_usability,
+                                'pain_missing_info': pain_missing_info,
+                                'pain_missing_decisions': pain_missing_decisions,
+                                'pain_manual_work': pain_manual_work,
+                                'pain_workarounds': pain_workarounds,
+                                'pain_time_added': pain_time_added,
+                                'pain_why_necessary': pain_why_necessary,
+                            },
+                        },
+                    },
+                    'part3_cross_product_process': {
+                        'section_a_integration': {
+                            'integration_products_work_together': integration_products_work_together,
+                            'integration_manual_data_movement': integration_manual_data_movement,
+                            'integration_gaps': integration_gaps,
+                            'integration_combine_info': integration_combine_info,
+                            'integration_how_combine': integration_how_combine,
+                            'integration_time_to_combine': integration_time_to_combine,
+                            'integration_error_prone': integration_error_prone,
+                            'integration_outside_products': integration_outside_products,
+                            'integration_outside_fit': integration_outside_fit,
+                        },
+                        'section_b_bottlenecks': {
+                            'bottleneck_where_slows': bottleneck_where_slows,
+                            'bottleneck_waiting_info': bottleneck_waiting_info,
+                            'bottleneck_manual_steps': bottleneck_manual_steps,
+                            'bottleneck_rework': bottleneck_rework,
+                            'bottleneck_handoffs': bottleneck_handoffs,
+                            'bottleneck_takes_longer': bottleneck_takes_longer,
+                            'bottleneck_why_long': bottleneck_why_long,
+                            'bottleneck_faster_look_like': bottleneck_faster_look_like,
+                            'bottleneck_partner_delays': bottleneck_partner_delays,
+                            'bottleneck_partner_waiting': bottleneck_partner_waiting,
+                            'bottleneck_partner_frustrations': bottleneck_partner_frustrations,
+                        },
+                    },
+                    'part4_partner_delivery': {
+                        'section_a_info_needs': {
+                            'partner_info_needs': partner_info_needs,
+                            'partner_info_frequency': partner_info_frequency,
+                            'partner_info_format': partner_info_format,
+                            'partner_delivery_method': partner_delivery_method,
+                            'partner_delivery_time': partner_delivery_time,
+                            'partner_delivery_automated': partner_delivery_automated,
+                            'partner_value_cant_provide': partner_value_cant_provide,
+                        },
+                        'section_b_confidence_trust': {
+                            'partner_confidence_builders': partner_confidence_builders,
+                            'partner_concerns': partner_concerns,
+                            'partner_demonstrate_data_led': partner_demonstrate_data_led,
+                        },
+                    },
+                    'part5_ideal_future_state': {
+                        'section_a_prioritization': {
+                            'priority_biggest_impact': priority_biggest_impact,
+                            'priority_why': priority_why,
+                            'priority_impact_detail': priority_impact_detail,
+                            'priority_frequency': priority_frequency,
+                            'priority_prevents_faster': priority_prevents_faster,
+                            'priority_partner_difference': priority_partner_difference,
+                        },
+                        'section_b_vision': {
+                            'vision_day_to_day': vision_day_to_day,
+                            'vision_can_do_new': vision_can_do_new,
+                            'vision_decisions_faster': vision_decisions_faster,
+                            'vision_partner_delivery_changed': vision_partner_delivery_changed,
+                            'vision_information_access': vision_information_access,
+                            'vision_questions_answer': vision_questions_answer,
+                            'vision_answer_speed': vision_answer_speed,
+                            'vision_information_confidence': vision_information_confidence,
+                            'vision_workflow_changed': vision_workflow_changed,
+                            'vision_manual_steps_gone': vision_manual_steps_gone,
+                            'vision_whats_faster': vision_whats_faster,
+                            'vision_whats_easier': vision_whats_easier,
+                            'vision_whats_reliable': vision_whats_reliable,
+                            'vision_partner_experience_faster': vision_partner_experience_faster,
+                            'vision_partner_confidence': vision_partner_confidence,
+                            'vision_partner_access': vision_partner_access,
+                        },
+                        'section_c_capabilities': {
+                            'capability_requirements': capability_requirements,
+                            'capability_fast_enough': capability_fast_enough,
+                            'capability_quality_requirements': capability_quality_requirements,
+                        },
+                    },
+                    'part6_wrapup': {
+                        'summary_validation': summary_validation,
+                        'summary_missed': summary_missed,
+                        'summary_most_important': summary_most_important,
+                        'summary_critical_not_discussed': summary_critical_not_discussed,
+                        'summary_ensure_understanding': summary_ensure_understanding,
+                    },
+                }
+
+                save_product_data(editing_pid, {'business_owner_session': owner_session})
+                st.success("Saved Business Owner/User data for product")
+                st.rerun()
 
     elif page == 'Business Owner Sessions':
         st.header("Business Owner / User Sessions")

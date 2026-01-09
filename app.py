@@ -9,7 +9,7 @@ import hashlib
 DATA_DIR = Path("data")
 AGGREGATED_FILE = DATA_DIR / "aggregated.json"
 UPLOADS_DIR = Path("uploads")
-PRODUCT_CATALOG_FILE = UPLOADS_DIR / "Product Catalog 2c34aca9ecb38075ab7fcdbec29ce503.csv"
+PRODUCT_CATALOG_FILE = UPLOADS_DIR / "Product Catalog.csv"
 
 st.set_page_config(page_title="Workshop Session Capture", layout="wide")
 
@@ -28,7 +28,7 @@ def ensure_dirs():
     AGGREGATED_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not AGGREGATED_FILE.exists():
         with open(AGGREGATED_FILE, "w") as f:
-            json.dump({"products": {}, "business_owners": {}}, f)
+            json.dump({"products": {}}, f)
 
 
 def slugify(name: str) -> str:
@@ -167,17 +167,6 @@ def get_empty_product_template():
                 "summary_validation": "",
                 "quotes": []
             }
-        },
-        
-        # Simplified fields for basic edit form
-        "simple_edit": {
-            "date": "",
-            "duration_minutes": 90,
-            "attendees": [],
-            "recording_link": "",
-            "technical_stack": "",
-            "dev_practices": "",
-            "top_pain_points": ""
         },
 
         # Business Owner / User session per product
@@ -504,18 +493,7 @@ def save_product_data(product_id, product_data):
     save_aggregated_data(aggregated)
 
 
-def save_business_owner_data(owner_name, owner_data):
-    """Save or update business owner data directly in aggregated.json."""
-    aggregated = load_aggregated_data()
-    
-    if owner_name not in aggregated["business_owners"]:
-        # Initialize with full template
-        aggregated["business_owners"][owner_name] = get_empty_business_owner_template()
-    
-    # Update all fields from owner_data
-    aggregated["business_owners"][owner_name].update(owner_data)
-    
-    save_aggregated_data(aggregated)
+
 
 
 def load_products():
@@ -538,11 +516,6 @@ def migrate_remove_last_updated():
     for pid, prod in list(data.get("products", {}).items()):
         if isinstance(prod, dict) and "last_updated" in prod:
             del prod["last_updated"]
-            changed = True
-    # Clean business owners
-    for owner, bo in list(data.get("business_owners", {}).items()):
-        if isinstance(bo, dict) and "last_updated" in bo:
-            del bo["last_updated"]
             changed = True
     if changed:
         save_aggregated_data(data)
@@ -596,11 +569,11 @@ def load_products_from_csv():
 
 
 def load_aggregated_data():
-    """Load aggregated data (products and business owners)."""
+    """Load aggregated data (products only)."""
     if AGGREGATED_FILE.exists():
         with open(AGGREGATED_FILE, 'r') as f:
             return json.load(f)
-    return {"products": {}, "business_owners": {}}
+    return {"products": {}}
 
 
 def save_aggregated_data(data):
@@ -614,9 +587,6 @@ def import_products_from_csv():
     aggregated = load_aggregated_data()
     csv_products = load_products_from_csv()
     
-    # Track business owners for template pre-population
-    business_owners = set()
-    
     for csv_prod in csv_products:
         pid = slugify(csv_prod['product_name'])
         # Only add if not already exists
@@ -627,23 +597,6 @@ def import_products_from_csv():
             new_product.update(csv_prod)
             new_product["product_id"] = pid
             aggregated["products"][pid] = new_product
-        
-        # Track business owner
-        owner = csv_prod.get('business_owner', '')
-        if owner:
-            business_owners.add(owner)
-    
-    # Pre-populate business owner templates with their products
-    for owner in business_owners:
-        if owner not in aggregated["business_owners"]:
-            aggregated["business_owners"][owner] = get_empty_business_owner_template()
-        
-        # Always update products_covered list to keep it in sync
-        products_for_owner = [p for p in aggregated["products"].values() 
-                             if p.get('business_owner') == owner]
-        aggregated["business_owners"][owner]['products_covered'] = [
-            p['product_name'] for p in products_for_owner
-        ]
     
     save_aggregated_data(aggregated)
     return aggregated
@@ -653,12 +606,6 @@ def get_product_data(product_id):
     """Get product data from aggregated.json."""
     aggregated = load_aggregated_data()
     return aggregated.get("products", {}).get(product_id, {})
-
-
-def get_business_owner_data(owner_name):
-    """Get business owner data from aggregated.json."""
-    aggregated = load_aggregated_data()
-    return aggregated.get("business_owners", {}).get(owner_name, {})
 
 
 # --- UI ---
@@ -673,7 +620,6 @@ def main():
     # Navigation buttons
     nav = {
         'Products': st.sidebar.button('Products', key='nav_products'),
-        'Business Owner Sessions': st.sidebar.button('Business Owner Sessions', key='nav_business_sessions'),
         'Export Backup': st.sidebar.button('Export Backup', key='nav_export'),
     }
     
@@ -1258,135 +1204,135 @@ def main():
             part6 = existing_bo.get('part6_wrapup', {})
 
             with st.expander("Part 1: Context & Business Process", expanded=False):
-                context_role = st.text_area("Role in delivery process", value=part1.get('context_role',''))
-                context_stages = st.text_area("Stages involved", value=part1.get('context_stages',''))
-                context_decisions = st.text_area("Decisions made", value=part1.get('context_decisions',''))
-                context_deliverables = st.text_area("Key deliverables", value=part1.get('context_deliverables',''))
-                context_workflow = st.text_area("Typical workflow/process", value=part1.get('context_workflow',''))
-                context_steps = st.text_area("Workflow steps", value=part1.get('context_steps',''))
-                context_info_needed = st.text_area("Information needed at each step", value=part1.get('context_info_needed',''))
-                context_decision_points = st.text_area("Decision points", value=part1.get('context_decision_points',''))
-                context_partner_impact = st.text_area("Impact on partner timeline", value=part1.get('context_partner_impact',''))
-                context_partner_confidence = st.text_area("What builds partner confidence", value=part1.get('context_partner_confidence',''))
-                context_partner_frustration = st.text_area("Where partners get frustrated", value=part1.get('context_partner_frustration',''))
+                context_role = st.text_area("Role in delivery process", value=part1.get('context_role',''), key=f"{editing_pid}-bo-context_role")
+                context_stages = st.text_area("Stages involved", value=part1.get('context_stages',''), key=f"{editing_pid}-bo-context_stages")
+                context_decisions = st.text_area("Decisions made", value=part1.get('context_decisions',''), key=f"{editing_pid}-bo-context_decisions")
+                context_deliverables = st.text_area("Key deliverables", value=part1.get('context_deliverables',''), key=f"{editing_pid}-bo-context_deliverables")
+                context_workflow = st.text_area("Typical workflow/process", value=part1.get('context_workflow',''), key=f"{editing_pid}-bo-context_workflow")
+                context_steps = st.text_area("Workflow steps", value=part1.get('context_steps',''), key=f"{editing_pid}-bo-context_steps")
+                context_info_needed = st.text_area("Information needed at each step", value=part1.get('context_info_needed',''), key=f"{editing_pid}-bo-context_info_needed")
+                context_decision_points = st.text_area("Decision points", value=part1.get('context_decision_points',''), key=f"{editing_pid}-bo-context_decision_points")
+                context_partner_impact = st.text_area("Impact on partner timeline", value=part1.get('context_partner_impact',''), key=f"{editing_pid}-bo-context_partner_impact")
+                context_partner_confidence = st.text_area("What builds partner confidence", value=part1.get('context_partner_confidence',''), key=f"{editing_pid}-bo-context_partner_confidence")
+                context_partner_frustration = st.text_area("Where partners get frustrated", value=part1.get('context_partner_frustration',''), key=f"{editing_pid}-bo-context_partner_frustration")
 
             with st.expander("Part 2: Product Portfolio Review", expanded=False):
                 st.markdown("**Section A: Business Owner**")
-                product_purpose = st.text_area("Purpose of this product", value=part2a.get('product_purpose',''))
-                product_why_created = st.text_area("Why was it created?", value=part2a.get('product_why_created',''))
-                product_what_achieve = st.text_area("What is it used to achieve?", value=part2a.get('product_what_achieve',''))
-                product_impact_works_well = st.text_area("Impact when it works well", value=part2a.get('product_impact_works_well',''))
-                product_impact_doesnt_work = st.text_area("Impact when it doesn't", value=part2a.get('product_impact_doesnt_work',''))
-                product_time_impact = st.text_area("Time saved/lost", value=part2a.get('product_time_impact',''))
-                product_quality_decisions = st.text_area("Quality of decisions", value=part2a.get('product_quality_decisions',''))
-                product_partner_confidence = st.text_area("Partner confidence", value=part2a.get('product_partner_confidence',''))
+                product_purpose = st.text_area("Purpose of this product", value=part2a.get('product_purpose',''), key=f"{editing_pid}-bo-product_purpose")
+                product_why_created = st.text_area("Why was it created?", value=part2a.get('product_why_created',''), key=f"{editing_pid}-bo-product_why_created")
+                product_what_achieve = st.text_area("What is it used to achieve?", value=part2a.get('product_what_achieve',''), key=f"{editing_pid}-bo-product_what_achieve")
+                product_impact_works_well = st.text_area("Impact when it works well", value=part2a.get('product_impact_works_well',''), key=f"{editing_pid}-bo-product_impact_works_well")
+                product_impact_doesnt_work = st.text_area("Impact when it doesn't", value=part2a.get('product_impact_doesnt_work',''), key=f"{editing_pid}-bo-product_impact_doesnt_work")
+                product_time_impact = st.text_area("Time saved/lost", value=part2a.get('product_time_impact',''), key=f"{editing_pid}-bo-product_time_impact")
+                product_quality_decisions = st.text_area("Quality of decisions", value=part2a.get('product_quality_decisions',''), key=f"{editing_pid}-bo-product_quality_decisions")
+                product_partner_confidence = st.text_area("Partner confidence", value=part2a.get('product_partner_confidence',''), key=f"{editing_pid}-bo-product_partner_confidence")
 
                 st.markdown("---")
                 st.markdown("**Section B: Users - Use Overview**")
-                use_purpose = st.text_area("What do users use this for?", value=part2b1.get('use_purpose',''))
-                use_frequency = st.text_area("How often?", value=part2b1.get('use_frequency',''))
-                use_who_else = st.text_area("Who else uses it?", value=part2b1.get('use_who_else',''))
-                use_workflow_stage = st.text_area("Workflow stage", value=part2b1.get('use_workflow_stage',''))
-                use_critical_path = st.text_area("Critical path or supporting?", value=part2b1.get('use_critical_path',''))
-                use_decisions = st.text_area("Decisions based on outputs", value=part2b1.get('use_decisions',''))
-                use_decision_explanation = st.text_area("How decisions are made", value=part2b1.get('use_decision_explanation',''))
-                use_critical_decisions = st.text_area("Are those critical?", value=part2b1.get('use_critical_decisions',''))
-                use_confidence_outputs = st.text_area("Confidence in outputs", value=part2b1.get('use_confidence_outputs',''))
-                use_decisions_without_product = st.text_area("Decisions without product & why", value=part2b1.get('use_decisions_without_product',''))
-                use_why_not_direct = st.text_area("Why not used directly?", value=part2b1.get('use_why_not_direct',''))
+                use_purpose = st.text_area("What do users use this for?", value=part2b1.get('use_purpose',''), key=f"{editing_pid}-bo-use_purpose")
+                use_frequency = st.text_area("How often?", value=part2b1.get('use_frequency',''), key=f"{editing_pid}-bo-use_frequency")
+                use_who_else = st.text_area("Who else uses it?", value=part2b1.get('use_who_else',''), key=f"{editing_pid}-bo-use_who_else")
+                use_workflow_stage = st.text_area("Workflow stage", value=part2b1.get('use_workflow_stage',''), key=f"{editing_pid}-bo-use_workflow_stage")
+                use_critical_path = st.text_area("Critical path or supporting?", value=part2b1.get('use_critical_path',''), key=f"{editing_pid}-bo-use_critical_path")
+                use_decisions = st.text_area("Decisions based on outputs", value=part2b1.get('use_decisions',''), key=f"{editing_pid}-bo-use_decisions")
+                use_decision_explanation = st.text_area("How decisions are made", value=part2b1.get('use_decision_explanation',''), key=f"{editing_pid}-bo-use_decision_explanation")
+                use_critical_decisions = st.text_area("Are those critical?", value=part2b1.get('use_critical_decisions',''), key=f"{editing_pid}-bo-use_critical_decisions")
+                use_confidence_outputs = st.text_area("Confidence in outputs", value=part2b1.get('use_confidence_outputs',''), key=f"{editing_pid}-bo-use_confidence_outputs")
+                use_decisions_without_product = st.text_area("Decisions without product & why", value=part2b1.get('use_decisions_without_product',''), key=f"{editing_pid}-bo-use_decisions_without_product")
+                use_why_not_direct = st.text_area("Why not used directly?", value=part2b1.get('use_why_not_direct',''), key=f"{editing_pid}-bo-use_why_not_direct")
 
                 st.markdown("---")
                 st.markdown("**Section B: Users - Pain Points & Gaps**")
-                pain_frustrations = st.text_area("Frustrations", value=part2b2.get('pain_frustrations',''))
-                pain_slowdowns = st.text_area("Slowdowns", value=part2b2.get('pain_slowdowns',''))
-                pain_extra_work = st.text_area("Extra work", value=part2b2.get('pain_extra_work',''))
-                pain_rework_errors = st.text_area("Rework/errors", value=part2b2.get('pain_rework_errors',''))
-                pain_unsupported_needs = st.text_area("Unsupported needs", value=part2b2.get('pain_unsupported_needs',''))
-                pain_content_quality = st.text_area("Content/Quality issues", value=part2b2.get('pain_content_quality',''))
-                pain_timeline = st.text_area("Timeline too slow?", value=part2b2.get('pain_timeline',''))
-                pain_usability = st.text_area("Usability challenges", value=part2b2.get('pain_usability',''))
-                pain_missing_info = st.text_area("Missing information", value=part2b2.get('pain_missing_info',''))
-                pain_missing_decisions = st.text_area("Missing decision data", value=part2b2.get('pain_missing_decisions',''))
-                pain_manual_work = st.text_area("Manual work to automate", value=part2b2.get('pain_manual_work',''))
-                pain_workarounds = st.text_area("Workarounds", value=part2b2.get('pain_workarounds',''))
-                pain_time_added = st.text_area("Time added by workarounds", value=part2b2.get('pain_time_added',''))
-                pain_why_necessary = st.text_area("Why necessary", value=part2b2.get('pain_why_necessary',''))
+                pain_frustrations = st.text_area("Frustrations", value=part2b2.get('pain_frustrations',''), key=f"{editing_pid}-bo-pain_frustrations")
+                pain_slowdowns = st.text_area("Slowdowns", value=part2b2.get('pain_slowdowns',''), key=f"{editing_pid}-bo-pain_slowdowns")
+                pain_extra_work = st.text_area("Extra work", value=part2b2.get('pain_extra_work',''), key=f"{editing_pid}-bo-pain_extra_work")
+                pain_rework_errors = st.text_area("Rework/errors", value=part2b2.get('pain_rework_errors',''), key=f"{editing_pid}-bo-pain_rework_errors")
+                pain_unsupported_needs = st.text_area("Unsupported needs", value=part2b2.get('pain_unsupported_needs',''), key=f"{editing_pid}-bo-pain_unsupported_needs")
+                pain_content_quality = st.text_area("Content/Quality issues", value=part2b2.get('pain_content_quality',''), key=f"{editing_pid}-bo-pain_content_quality")
+                pain_timeline = st.text_area("Timeline too slow?", value=part2b2.get('pain_timeline',''), key=f"{editing_pid}-bo-pain_timeline")
+                pain_usability = st.text_area("Usability challenges", value=part2b2.get('pain_usability',''), key=f"{editing_pid}-bo-pain_usability")
+                pain_missing_info = st.text_area("Missing information", value=part2b2.get('pain_missing_info',''), key=f"{editing_pid}-bo-pain_missing_info")
+                pain_missing_decisions = st.text_area("Missing decision data", value=part2b2.get('pain_missing_decisions',''), key=f"{editing_pid}-bo-pain_missing_decisions")
+                pain_manual_work = st.text_area("Manual work to automate", value=part2b2.get('pain_manual_work',''), key=f"{editing_pid}-bo-pain_manual_work")
+                pain_workarounds = st.text_area("Workarounds", value=part2b2.get('pain_workarounds',''), key=f"{editing_pid}-bo-pain_workarounds")
+                pain_time_added = st.text_area("Time added by workarounds", value=part2b2.get('pain_time_added',''), key=f"{editing_pid}-bo-pain_time_added")
+                pain_why_necessary = st.text_area("Why necessary", value=part2b2.get('pain_why_necessary',''), key=f"{editing_pid}-bo-pain_why_necessary")
 
             with st.expander("Part 3: Cross-Product & Process View", expanded=False):
-                integration_products_work_together = st.text_area("How this works with other products", value=part3a.get('integration_products_work_together',''))
-                integration_manual_data_movement = st.text_area("Manual data movement", value=part3a.get('integration_manual_data_movement',''))
-                integration_gaps = st.text_area("Information gaps", value=part3a.get('integration_gaps',''))
-                integration_combine_info = st.text_area("Combining information needs", value=part3a.get('integration_combine_info',''))
-                integration_how_combine = st.text_area("How combine today", value=part3a.get('integration_how_combine',''))
-                integration_time_to_combine = st.text_area("Time to combine", value=part3a.get('integration_time_to_combine',''))
-                integration_error_prone = st.text_area("Error prone?", value=part3a.get('integration_error_prone',''))
-                integration_outside_products = st.text_area("Outside products/info also needed", value=part3a.get('integration_outside_products',''))
-                integration_outside_fit = st.text_area("How they fit", value=part3a.get('integration_outside_fit',''))
+                integration_products_work_together = st.text_area("How this works with other products", value=part3a.get('integration_products_work_together',''), key=f"{editing_pid}-bo-integration_products_work_together")
+                integration_manual_data_movement = st.text_area("Manual data movement", value=part3a.get('integration_manual_data_movement',''), key=f"{editing_pid}-bo-integration_manual_data_movement")
+                integration_gaps = st.text_area("Information gaps", value=part3a.get('integration_gaps',''), key=f"{editing_pid}-bo-integration_gaps")
+                integration_combine_info = st.text_area("Combining information needs", value=part3a.get('integration_combine_info',''), key=f"{editing_pid}-bo-integration_combine_info")
+                integration_how_combine = st.text_area("How combine today", value=part3a.get('integration_how_combine',''), key=f"{editing_pid}-bo-integration_how_combine")
+                integration_time_to_combine = st.text_area("Time to combine", value=part3a.get('integration_time_to_combine',''), key=f"{editing_pid}-bo-integration_time_to_combine")
+                integration_error_prone = st.text_area("Error prone?", value=part3a.get('integration_error_prone',''), key=f"{editing_pid}-bo-integration_error_prone")
+                integration_outside_products = st.text_area("Outside products/info also needed", value=part3a.get('integration_outside_products',''), key=f"{editing_pid}-bo-integration_outside_products")
+                integration_outside_fit = st.text_area("How they fit", value=part3a.get('integration_outside_fit',''), key=f"{editing_pid}-bo-integration_outside_fit")
 
                 st.markdown("---")
-                bottleneck_where_slows = st.text_area("Where process slows", value=part3b.get('bottleneck_where_slows',''))
-                bottleneck_waiting_info = st.text_area("Waiting for information", value=part3b.get('bottleneck_waiting_info',''))
-                bottleneck_manual_steps = st.text_area("Manual steps", value=part3b.get('bottleneck_manual_steps',''))
-                bottleneck_rework = st.text_area("Rework due to errors", value=part3b.get('bottleneck_rework',''))
-                bottleneck_handoffs = st.text_area("Handoffs", value=part3b.get('bottleneck_handoffs',''))
-                bottleneck_takes_longer = st.text_area("What takes longer than it should", value=part3b.get('bottleneck_takes_longer',''))
-                bottleneck_why_long = st.text_area("Why it takes long", value=part3b.get('bottleneck_why_long',''))
-                bottleneck_faster_look_like = st.text_area("What would faster look like", value=part3b.get('bottleneck_faster_look_like',''))
-                bottleneck_partner_delays = st.text_area("Partner delays", value=part3b.get('bottleneck_partner_delays',''))
-                bottleneck_partner_waiting = st.text_area("Partner waiting on you", value=part3b.get('bottleneck_partner_waiting',''))
-                bottleneck_partner_frustrations = st.text_area("Partner frustrations", value=part3b.get('bottleneck_partner_frustrations',''))
+                bottleneck_where_slows = st.text_area("Where process slows", value=part3b.get('bottleneck_where_slows',''), key=f"{editing_pid}-bo-bottleneck_where_slows")
+                bottleneck_waiting_info = st.text_area("Waiting for information", value=part3b.get('bottleneck_waiting_info',''), key=f"{editing_pid}-bo-bottleneck_waiting_info")
+                bottleneck_manual_steps = st.text_area("Manual steps", value=part3b.get('bottleneck_manual_steps',''), key=f"{editing_pid}-bo-bottleneck_manual_steps")
+                bottleneck_rework = st.text_area("Rework due to errors", value=part3b.get('bottleneck_rework',''), key=f"{editing_pid}-bo-bottleneck_rework")
+                bottleneck_handoffs = st.text_area("Handoffs", value=part3b.get('bottleneck_handoffs',''), key=f"{editing_pid}-bo-bottleneck_handoffs")
+                bottleneck_takes_longer = st.text_area("What takes longer than it should", value=part3b.get('bottleneck_takes_longer',''), key=f"{editing_pid}-bo-bottleneck_takes_longer")
+                bottleneck_why_long = st.text_area("Why it takes long", value=part3b.get('bottleneck_why_long',''), key=f"{editing_pid}-bo-bottleneck_why_long")
+                bottleneck_faster_look_like = st.text_area("What would faster look like", value=part3b.get('bottleneck_faster_look_like',''), key=f"{editing_pid}-bo-bottleneck_faster_look_like")
+                bottleneck_partner_delays = st.text_area("Partner delays", value=part3b.get('bottleneck_partner_delays',''), key=f"{editing_pid}-bo-bottleneck_partner_delays")
+                bottleneck_partner_waiting = st.text_area("Partner waiting on you", value=part3b.get('bottleneck_partner_waiting',''), key=f"{editing_pid}-bo-bottleneck_partner_waiting")
+                bottleneck_partner_frustrations = st.text_area("Partner frustrations", value=part3b.get('bottleneck_partner_frustrations',''), key=f"{editing_pid}-bo-bottleneck_partner_frustrations")
 
             with st.expander("Part 4: Partner Delivery & External Perspective", expanded=False):
-                partner_info_needs = st.text_area("Information partners need", value=part4a.get('partner_info_needs',''))
-                partner_info_frequency = st.text_area("How often", value=part4a.get('partner_info_frequency',''))
-                partner_info_format = st.text_area("Format", value=part4a.get('partner_info_format',''))
-                partner_delivery_method = st.text_area("Delivery method", value=part4a.get('partner_delivery_method',''))
-                partner_delivery_time = st.text_area("Prep time", value=part4a.get('partner_delivery_time',''))
-                partner_delivery_automated = st.text_area("Manual or automated", value=part4a.get('partner_delivery_automated',''))
-                partner_value_cant_provide = st.text_area("Valuable info you can't easily provide", value=part4a.get('partner_value_cant_provide',''))
+                partner_info_needs = st.text_area("Information partners need", value=part4a.get('partner_info_needs',''), key=f"{editing_pid}-bo-partner_info_needs")
+                partner_info_frequency = st.text_area("How often", value=part4a.get('partner_info_frequency',''), key=f"{editing_pid}-bo-partner_info_frequency")
+                partner_info_format = st.text_area("Format", value=part4a.get('partner_info_format',''), key=f"{editing_pid}-bo-partner_info_format")
+                partner_delivery_method = st.text_area("Delivery method", value=part4a.get('partner_delivery_method',''), key=f"{editing_pid}-bo-partner_delivery_method")
+                partner_delivery_time = st.text_area("Prep time", value=part4a.get('partner_delivery_time',''), key=f"{editing_pid}-bo-partner_delivery_time")
+                partner_delivery_automated = st.text_area("Manual or automated", value=part4a.get('partner_delivery_automated',''), key=f"{editing_pid}-bo-partner_delivery_automated")
+                partner_value_cant_provide = st.text_area("Valuable info you can't easily provide", value=part4a.get('partner_value_cant_provide',''), key=f"{editing_pid}-bo-partner_value_cant_provide")
 
                 st.markdown("---")
-                partner_confidence_builders = st.text_area("What builds partner confidence", value=part4b.get('partner_confidence_builders',''))
-                partner_concerns = st.text_area("Partner concerns/questions", value=part4b.get('partner_concerns',''))
-                partner_demonstrate_data_led = st.text_area("Better demonstrate 'data-led'", value=part4b.get('partner_demonstrate_data_led',''))
+                partner_confidence_builders = st.text_area("What builds partner confidence", value=part4b.get('partner_confidence_builders',''), key=f"{editing_pid}-bo-partner_confidence_builders")
+                partner_concerns = st.text_area("Partner concerns/questions", value=part4b.get('partner_concerns',''), key=f"{editing_pid}-bo-partner_concerns")
+                partner_demonstrate_data_led = st.text_area("Better demonstrate 'data-led'", value=part4b.get('partner_demonstrate_data_led',''), key=f"{editing_pid}-bo-partner_demonstrate_data_led")
 
             with st.expander("Part 5: Ideal Future State", expanded=False):
-                priority_biggest_impact = st.text_area("One improvement with biggest impact", value=part5a.get('priority_biggest_impact',''))
-                priority_why = st.text_area("Why", value=part5a.get('priority_why',''))
-                priority_impact_detail = st.text_area("Impact details", value=part5a.get('priority_impact_detail',''))
-                priority_frequency = st.text_area("How often would it help", value=part5a.get('priority_frequency',''))
-                priority_prevents_faster = st.text_area("What prevents faster delivery", value=part5a.get('priority_prevents_faster',''))
-                priority_partner_difference = st.text_area("Biggest difference to partner", value=part5a.get('priority_partner_difference',''))
+                priority_biggest_impact = st.text_area("One improvement with biggest impact", value=part5a.get('priority_biggest_impact',''), key=f"{editing_pid}-bo-priority_biggest_impact")
+                priority_why = st.text_area("Why", value=part5a.get('priority_why',''), key=f"{editing_pid}-bo-priority_why")
+                priority_impact_detail = st.text_area("Impact details", value=part5a.get('priority_impact_detail',''), key=f"{editing_pid}-bo-priority_impact_detail")
+                priority_frequency = st.text_area("How often would it help", value=part5a.get('priority_frequency',''), key=f"{editing_pid}-bo-priority_frequency")
+                priority_prevents_faster = st.text_area("What prevents faster delivery", value=part5a.get('priority_prevents_faster',''), key=f"{editing_pid}-bo-priority_prevents_faster")
+                priority_partner_difference = st.text_area("Biggest difference to partner", value=part5a.get('priority_partner_difference',''), key=f"{editing_pid}-bo-priority_partner_difference")
 
                 st.markdown("---")
-                vision_day_to_day = st.text_area("Day-to-day work vision", value=part5b.get('vision_day_to_day',''))
-                vision_can_do_new = st.text_area("New capabilities vs today", value=part5b.get('vision_can_do_new',''))
-                vision_decisions_faster = st.text_area("Decisions faster/better", value=part5b.get('vision_decisions_faster',''))
-                vision_partner_delivery_changed = st.text_area("Partner delivery changed", value=part5b.get('vision_partner_delivery_changed',''))
-                vision_information_access = st.text_area("New information access", value=part5b.get('vision_information_access',''))
-                vision_questions_answer = st.text_area("Questions answerable", value=part5b.get('vision_questions_answer',''))
-                vision_answer_speed = st.text_area("Answer speed", value=part5b.get('vision_answer_speed',''))
-                vision_information_confidence = st.text_area("Information confidence", value=part5b.get('vision_information_confidence',''))
-                vision_workflow_changed = st.text_area("Workflow changes", value=part5b.get('vision_workflow_changed',''))
-                vision_manual_steps_gone = st.text_area("Manual steps gone", value=part5b.get('vision_manual_steps_gone',''))
-                vision_whats_faster = st.text_area("What's faster", value=part5b.get('vision_whats_faster',''))
-                vision_whats_easier = st.text_area("What's easier", value=part5b.get('vision_whats_easier',''))
-                vision_whats_reliable = st.text_area("What's more reliable", value=part5b.get('vision_whats_reliable',''))
-                vision_partner_experience_faster = st.text_area("Faster from partner perspective", value=part5b.get('vision_partner_experience_faster',''))
-                vision_partner_confidence = st.text_area("What builds their confidence", value=part5b.get('vision_partner_confidence',''))
-                vision_partner_access = st.text_area("Partner access improvements", value=part5b.get('vision_partner_access',''))
+                vision_day_to_day = st.text_area("Day-to-day work vision", value=part5b.get('vision_day_to_day',''), key=f"{editing_pid}-bo-vision_day_to_day")
+                vision_can_do_new = st.text_area("New capabilities vs today", value=part5b.get('vision_can_do_new',''), key=f"{editing_pid}-bo-vision_can_do_new")
+                vision_decisions_faster = st.text_area("Decisions faster/better", value=part5b.get('vision_decisions_faster',''), key=f"{editing_pid}-bo-vision_decisions_faster")
+                vision_partner_delivery_changed = st.text_area("Partner delivery changed", value=part5b.get('vision_partner_delivery_changed',''), key=f"{editing_pid}-bo-vision_partner_delivery_changed")
+                vision_information_access = st.text_area("New information access", value=part5b.get('vision_information_access',''), key=f"{editing_pid}-bo-vision_information_access")
+                vision_questions_answer = st.text_area("Questions answerable", value=part5b.get('vision_questions_answer',''), key=f"{editing_pid}-bo-vision_questions_answer")
+                vision_answer_speed = st.text_area("Answer speed", value=part5b.get('vision_answer_speed',''), key=f"{editing_pid}-bo-vision_answer_speed")
+                vision_information_confidence = st.text_area("Information confidence", value=part5b.get('vision_information_confidence',''), key=f"{editing_pid}-bo-vision_information_confidence")
+                vision_workflow_changed = st.text_area("Workflow changes", value=part5b.get('vision_workflow_changed',''), key=f"{editing_pid}-bo-vision_workflow_changed")
+                vision_manual_steps_gone = st.text_area("Manual steps gone", value=part5b.get('vision_manual_steps_gone',''), key=f"{editing_pid}-bo-vision_manual_steps_gone")
+                vision_whats_faster = st.text_area("What's faster", value=part5b.get('vision_whats_faster',''), key=f"{editing_pid}-bo-vision_whats_faster")
+                vision_whats_easier = st.text_area("What's easier", value=part5b.get('vision_whats_easier',''), key=f"{editing_pid}-bo-vision_whats_easier")
+                vision_whats_reliable = st.text_area("What's more reliable", value=part5b.get('vision_whats_reliable',''), key=f"{editing_pid}-bo-vision_whats_reliable")
+                vision_partner_experience_faster = st.text_area("Faster from partner perspective", value=part5b.get('vision_partner_experience_faster',''), key=f"{editing_pid}-bo-vision_partner_experience_faster")
+                vision_partner_confidence = st.text_area("What builds their confidence", value=part5b.get('vision_partner_confidence',''), key=f"{editing_pid}-bo-vision_partner_confidence")
+                vision_partner_access = st.text_area("Partner access improvements", value=part5b.get('vision_partner_access',''), key=f"{editing_pid}-bo-vision_partner_access")
 
                 st.markdown("---")
-                capability_requirements = st.text_area("Predict platform capabilities needed", value=part5c.get('capability_requirements',''))
-                capability_fast_enough = st.text_area("What is 'fast enough'", value=part5c.get('capability_fast_enough',''))
-                capability_quality_requirements = st.text_area("What is 'good enough' quality", value=part5c.get('capability_quality_requirements',''))
+                capability_requirements = st.text_area("Predict platform capabilities needed", value=part5c.get('capability_requirements',''), key=f"{editing_pid}-bo-capability_requirements")
+                capability_fast_enough = st.text_area("What is 'fast enough'", value=part5c.get('capability_fast_enough',''), key=f"{editing_pid}-bo-capability_fast_enough")
+                capability_quality_requirements = st.text_area("What is 'good enough' quality", value=part5c.get('capability_quality_requirements',''), key=f"{editing_pid}-bo-capability_quality_requirements")
 
             with st.expander("Part 6: Wrap-Up", expanded=False):
-                summary_validation = st.text_area("Did we get that right?", value=part6.get('summary_validation',''))
-                summary_missed = st.text_area("What did we miss?", value=part6.get('summary_missed',''))
-                summary_most_important = st.text_area("What's most important?", value=part6.get('summary_most_important',''))
-                summary_critical_not_discussed = st.text_area("Anything critical not discussed?", value=part6.get('summary_critical_not_discussed',''))
-                summary_ensure_understanding = st.text_area("Anything to ensure we understand?", value=part6.get('summary_ensure_understanding',''))
+                summary_validation = st.text_area("Did we get that right?", value=part6.get('summary_validation',''), key=f"{editing_pid}-bo-summary_validation")
+                summary_missed = st.text_area("What did we miss?", value=part6.get('summary_missed',''), key=f"{editing_pid}-bo-summary_missed")
+                summary_most_important = st.text_area("What's most important?", value=part6.get('summary_most_important',''), key=f"{editing_pid}-bo-summary_most_important")
+                summary_critical_not_discussed = st.text_area("Anything critical not discussed?", value=part6.get('summary_critical_not_discussed',''), key=f"{editing_pid}-bo-summary_critical_not_discussed")
+                summary_ensure_understanding = st.text_area("Anything to ensure we understand?", value=part6.get('summary_ensure_understanding',''), key=f"{editing_pid}-bo-summary_ensure_understanding")
 
             submitted = st.form_submit_button("Save Business Owner session")
             if submitted:
@@ -1535,371 +1481,6 @@ def main():
                 st.success("Saved Business Owner/User data for product")
                 st.rerun()
 
-    elif page == 'Business Owner Sessions':
-        st.header("Business Owner / User Sessions")
-        st.markdown("Edit business session data at the business owner level. Each session covers all products owned by that business owner.")
-        
-        csv_products = load_products_from_csv()
-        if not csv_products:
-            st.warning("Could not load products from CSV.")
-            return
-        
-        # Group products by business owner
-        owner_groups = {}
-        for prod in csv_products:
-            owner = prod.get('business_owner', 'Unassigned')
-            if owner not in owner_groups:
-                owner_groups[owner] = []
-            owner_groups[owner].append(prod)
-        
-        # Select business owner
-        selected_owner = st.selectbox(
-            "Select Business Owner",
-            options=sorted(owner_groups.keys()),
-            key='business_owner_select'
-        )
-        
-        if not selected_owner:
-            return
-        
-        products_for_owner = owner_groups[selected_owner]
-        
-        st.markdown(f"### Business Owner: {selected_owner}")
-        st.markdown(f"**Products covered in this session ({len(products_for_owner)}):**")
-        for prod in products_for_owner:
-            st.write(f"- {prod['product_name']}")
-        
-        st.markdown("---")
-        
-        # Load existing business owner data
-        existing_session = get_business_owner_data(selected_owner)
-        
-        # Business session form
-        with st.form(f"business-session-{slugify(selected_owner)}"):
-            st.markdown("### Business Owner / User Session")
-            
-            # Extract nested data
-            part1 = existing_session.get('part1_context_business_process', {}) if existing_session else {}
-            part2 = existing_session.get('part2_product_portfolio_review', {}) if existing_session else {}
-            part2a = part2.get('section_a_business_owner', {}) if part2 else {}
-            part2b = part2.get('section_b_users', {}) if part2 else {}
-            part2b1 = part2b.get('b1_use_overview', {}) if part2b else {}
-            part2b2 = part2b.get('b2_pain_points_gaps', {}) if part2b else {}
-            part3 = existing_session.get('part3_cross_product_process', {}) if existing_session else {}
-            part3a = part3.get('section_a_integration', {}) if part3 else {}
-            part3b = part3.get('section_b_bottlenecks', {}) if part3 else {}
-            part4 = existing_session.get('part4_partner_delivery', {}) if existing_session else {}
-            part4a = part4.get('section_a_info_needs', {}) if part4 else {}
-            part4b = part4.get('section_b_confidence_trust', {}) if part4 else {}
-            part5 = existing_session.get('part5_ideal_future_state', {}) if existing_session else {}
-            part5a = part5.get('section_a_prioritization', {}) if part5 else {}
-            part5b = part5.get('section_b_vision', {}) if part5 else {}
-            part5c = part5.get('section_c_capabilities', {}) if part5 else {}
-            part6 = existing_session.get('part6_wrapup', {}) if existing_session else {}
-            
-            with st.expander("Part 1: Context & Business Process (15m)", expanded=False):
-                st.markdown("**Purpose:** Establish business context and how this product family fits into technology delivery")
-                context_role = st.text_area("What's your role in the technology delivery process?", value=part1.get('context_role',''), key=f"{selected_owner}-context_role")
-                context_stages = st.text_area("Which stage(s)?", value=part1.get('context_stages',''), key=f"{selected_owner}-context_stages")
-                context_decisions = st.text_area("What decisions do you make?", value=part1.get('context_decisions',''), key=f"{selected_owner}-context_decisions")
-                context_deliverables = st.text_area("What are your key deliverables?", value=part1.get('context_deliverables',''), key=f"{selected_owner}-context_deliverables")
-                st.markdown("**Walk me through your typical workflow or process**")
-                context_workflow = st.text_area("Typical workflow/process", value=part1.get('context_workflow',''), key=f"{selected_owner}-context_workflow")
-                context_steps = st.text_area("What are the steps?", value=part1.get('context_steps',''), key=f"{selected_owner}-context_steps")
-                context_info_needed = st.text_area("What information do you need at each step?", value=part1.get('context_info_needed',''), key=f"{selected_owner}-context_info_needed")
-                context_decision_points = st.text_area("Where do decisions get made?", value=part1.get('context_decision_points',''), key=f"{selected_owner}-context_decision_points")
-                st.markdown("**How does this work relate to partnership delivery?**")
-                context_partner_impact = st.text_area("How does your work impact partner timeline?", value=part1.get('context_partner_impact',''), key=f"{selected_owner}-context_partner_impact")
-                context_partner_confidence = st.text_area("What builds partner confidence?", value=part1.get('context_partner_confidence',''), key=f"{selected_owner}-context_partner_confidence")
-                context_partner_frustration = st.text_area("Where do partners get frustrated or concerned?", value=part1.get('context_partner_frustration',''), key=f"{selected_owner}-context_partner_frustration")
-            
-            with st.expander("Part 2: Product Portfolio Review (30m)", expanded=False):
-                st.markdown("**Section A: Business Owner**")
-                product_purpose = st.text_area("What is the purpose of these products?", value=part2a.get('product_purpose',''), key=f"{selected_owner}-product_purpose")
-                product_why_created = st.text_area("Why were they created?", value=part2a.get('product_why_created',''), key=f"{selected_owner}-product_why_created")
-                product_what_achieve = st.text_area("What are they used to achieve?", value=part2a.get('product_what_achieve',''), key=f"{selected_owner}-product_what_achieve")
-                st.markdown("**What's the business impact when products work well vs. when they don't?**")
-                product_impact_works_well = st.text_area("When products work well", value=part2a.get('product_impact_works_well',''), key=f"{selected_owner}-product_impact_works_well")
-                product_impact_doesnt_work = st.text_area("When products don't work", value=part2a.get('product_impact_doesnt_work',''), key=f"{selected_owner}-product_impact_doesnt_work")
-                product_time_impact = st.text_area("Time saved/lost?", value=part2a.get('product_time_impact',''), key=f"{selected_owner}-product_time_impact")
-                product_quality_decisions = st.text_area("Quality of decisions?", value=part2a.get('product_quality_decisions',''), key=f"{selected_owner}-product_quality_decisions")
-                product_partner_confidence = st.text_area("Partner confidence?", value=part2a.get('product_partner_confidence',''), key=f"{selected_owner}-product_partner_confidence")
-                
-                st.markdown("---")
-                st.markdown("**Section B: Users - B.1 Use Overview**")
-                use_purpose = st.text_area("What do you use these products for? (Specific business purpose)", value=part2b1.get('use_purpose',''), key=f"{selected_owner}-use_purpose")
-                use_frequency = st.text_area("How often do you use them?", value=part2b1.get('use_frequency',''), key=f"{selected_owner}-use_frequency")
-                use_who_else = st.text_area("Who else uses them?", value=part2b1.get('use_who_else',''), key=f"{selected_owner}-use_who_else")
-                use_workflow_stage = st.text_area("Where does this fit in your workflow? (Which stage of technology delivery?)", value=part2b1.get('use_workflow_stage',''), key=f"{selected_owner}-use_workflow_stage")
-                use_critical_path = st.text_area("Is it critical path or supporting?", value=part2b1.get('use_critical_path',''), key=f"{selected_owner}-use_critical_path")
-                use_decisions = st.text_area("What decisions do you make based on product outputs?", value=part2b1.get('use_decisions',''), key=f"{selected_owner}-use_decisions")
-                use_decision_explanation = st.text_area("How do you make decisions based on the artefact?", value=part2b1.get('use_decision_explanation',''), key=f"{selected_owner}-use_decision_explanation")
-                use_critical_decisions = st.text_area("Are those critical decisions?", value=part2b1.get('use_critical_decisions',''), key=f"{selected_owner}-use_critical_decisions")
-                use_confidence_outputs = st.text_area("Do you have confidence in the outputs?", value=part2b1.get('use_confidence_outputs',''), key=f"{selected_owner}-use_confidence_outputs")
-                use_decisions_without_product = st.text_area("Have you ever made decisions without this product? Why?", value=part2b1.get('use_decisions_without_product',''), key=f"{selected_owner}-use_decisions_without_product")
-                use_why_not_direct = st.text_area("Why do you not use this product directly?", value=part2b1.get('use_why_not_direct',''), key=f"{selected_owner}-use_why_not_direct")
-                
-                st.markdown("---")
-                st.markdown("**Section B: Users - B.2 Pain Points & Gaps**")
-                pain_frustrations = st.text_area("What frustrates you about this product or process?", value=part2b2.get('pain_frustrations',''), key=f"{selected_owner}-pain_frustrations")
-                pain_slowdowns = st.text_area("What slows you down?", value=part2b2.get('pain_slowdowns',''), key=f"{selected_owner}-pain_slowdowns")
-                pain_extra_work = st.text_area("What creates extra work?", value=part2b2.get('pain_extra_work',''), key=f"{selected_owner}-pain_extra_work")
-                pain_rework_errors = st.text_area("What causes rework or errors?", value=part2b2.get('pain_rework_errors',''), key=f"{selected_owner}-pain_rework_errors")
-                st.markdown("**Are there things you need to do that this product doesn't support?**")
-                pain_unsupported_needs = st.text_area("Things product doesn't support", value=part2b2.get('pain_unsupported_needs',''), key=f"{selected_owner}-pain_unsupported_needs")
-                pain_content_quality = st.text_area("Content/Quality: Are outputs accurate, complete, useful?", value=part2b2.get('pain_content_quality',''), key=f"{selected_owner}-pain_content_quality")
-                pain_timeline = st.text_area("Timeline: Does it deliver results fast enough?", value=part2b2.get('pain_timeline',''), key=f"{selected_owner}-pain_timeline")
-                pain_usability = st.text_area("Usability: Is it easy to use or does it require special skills?", value=part2b2.get('pain_usability',''), key=f"{selected_owner}-pain_usability")
-                pain_missing_info = st.text_area("Information you need but can't get?", value=part2b2.get('pain_missing_info',''), key=f"{selected_owner}-pain_missing_info")
-                pain_missing_decisions = st.text_area("Decisions you need to make but lack data for?", value=part2b2.get('pain_missing_decisions',''), key=f"{selected_owner}-pain_missing_decisions")
-                pain_manual_work = st.text_area("Manual work you do that should be automated?", value=part2b2.get('pain_manual_work',''), key=f"{selected_owner}-pain_manual_work")
-                st.markdown("**Workarounds or manual processes**")
-                pain_workarounds = st.text_area("What are your workarounds?", value=part2b2.get('pain_workarounds',''), key=f"{selected_owner}-pain_workarounds")
-                pain_time_added = st.text_area("How much time do they add?", value=part2b2.get('pain_time_added',''), key=f"{selected_owner}-pain_time_added")
-                pain_why_necessary = st.text_area("Why are they necessary?", value=part2b2.get('pain_why_necessary',''), key=f"{selected_owner}-pain_why_necessary")
-            
-            with st.expander("Part 3: Cross-Product & Process View (30m)", expanded=False):
-                st.markdown("**Section A: Integration & Information Flow**")
-                integration_products_work_together = st.text_area("How do these products work together in your workflow?", value=part3a.get('integration_products_work_together',''), key=f"{selected_owner}-integration_products_work_together")
-                integration_manual_data_movement = st.text_area("Do you have to move data between them manually?", value=part3a.get('integration_manual_data_movement',''), key=f"{selected_owner}-integration_manual_data_movement")
-                integration_gaps = st.text_area("Are there gaps where you need information from multiple products?", value=part3a.get('integration_gaps',''), key=f"{selected_owner}-integration_gaps")
-                st.markdown("**Where do you need to combine information from different sources?**")
-                integration_combine_info = st.text_area("Information combining needs", value=part3a.get('integration_combine_info',''), key=f"{selected_owner}-integration_combine_info")
-                integration_how_combine = st.text_area("How do you do that today? (Excel, manually, not at all?)", value=part3a.get('integration_how_combine',''), key=f"{selected_owner}-integration_how_combine")
-                integration_time_to_combine = st.text_area("How much time does that take?", value=part3a.get('integration_time_to_combine',''), key=f"{selected_owner}-integration_time_to_combine")
-                integration_error_prone = st.text_area("Is it error-prone?", value=part3a.get('integration_error_prone',''), key=f"{selected_owner}-integration_error_prone")
-                st.markdown("**Products/information outside this family**")
-                integration_outside_products = st.text_area("Products or information sources outside this family that you also need?", value=part3a.get('integration_outside_products',''), key=f"{selected_owner}-integration_outside_products")
-                integration_outside_fit = st.text_area("How do they fit in?", value=part3a.get('integration_outside_fit',''), key=f"{selected_owner}-integration_outside_fit")
-                
-                st.markdown("---")
-                st.markdown("**Section B: Process Bottlenecks**")
-                st.markdown("**Where does your process slow down or get stuck?**")
-                bottleneck_where_slows = st.text_area("Where process slows down", value=part3b.get('bottleneck_where_slows',''), key=f"{selected_owner}-bottleneck_where_slows")
-                bottleneck_waiting_info = st.text_area("Waiting for information?", value=part3b.get('bottleneck_waiting_info',''), key=f"{selected_owner}-bottleneck_waiting_info")
-                bottleneck_manual_steps = st.text_area("Manual steps that take time?", value=part3b.get('bottleneck_manual_steps',''), key=f"{selected_owner}-bottleneck_manual_steps")
-                bottleneck_rework = st.text_area("Rework because of errors?", value=part3b.get('bottleneck_rework',''), key=f"{selected_owner}-bottleneck_rework")
-                bottleneck_handoffs = st.text_area("Handoffs to other teams?", value=part3b.get('bottleneck_handoffs',''), key=f"{selected_owner}-bottleneck_handoffs")
-                st.markdown("**What takes longer than it should?**")
-                bottleneck_takes_longer = st.text_area("What takes longer (site assessment, design iterations, reporting?)", value=part3b.get('bottleneck_takes_longer',''), key=f"{selected_owner}-bottleneck_takes_longer")
-                bottleneck_why_long = st.text_area("Why does it take so long?", value=part3b.get('bottleneck_why_long',''), key=f"{selected_owner}-bottleneck_why_long")
-                bottleneck_faster_look_like = st.text_area("What would faster look like?", value=part3b.get('bottleneck_faster_look_like',''), key=f"{selected_owner}-bottleneck_faster_look_like")
-                st.markdown("**Where do partners experience delays?**")
-                bottleneck_partner_delays = st.text_area("Partner delays", value=part3b.get('bottleneck_partner_delays',''), key=f"{selected_owner}-bottleneck_partner_delays")
-                bottleneck_partner_waiting = st.text_area("What are they waiting for from you?", value=part3b.get('bottleneck_partner_waiting',''), key=f"{selected_owner}-bottleneck_partner_waiting")
-                bottleneck_partner_frustrations = st.text_area("What frustrates them?", value=part3b.get('bottleneck_partner_frustrations',''), key=f"{selected_owner}-bottleneck_partner_frustrations")
-            
-            with st.expander("Part 4: Partner Delivery & External Perspective (15m)", expanded=False):
-                st.markdown("**Section A: Partner Information Needs**")
-                partner_info_needs = st.text_area("What information do partners need?", value=part4a.get('partner_info_needs',''), key=f"{selected_owner}-partner_info_needs")
-                partner_info_frequency = st.text_area("How often?", value=part4a.get('partner_info_frequency',''), key=f"{selected_owner}-partner_info_frequency")
-                partner_info_format = st.text_area("In what format?", value=part4a.get('partner_info_format',''), key=f"{selected_owner}-partner_info_format")
-                st.markdown("**How do you deliver information to partners today?**")
-                partner_delivery_method = st.text_area("Delivery method (reports, presentations, emails, phone calls?)", value=part4a.get('partner_delivery_method',''), key=f"{selected_owner}-partner_delivery_method")
-                partner_delivery_time = st.text_area("How long does it take to prepare?", value=part4a.get('partner_delivery_time',''), key=f"{selected_owner}-partner_delivery_time")
-                partner_delivery_automated = st.text_area("Is it manual or automated?", value=part4a.get('partner_delivery_automated',''), key=f"{selected_owner}-partner_delivery_automated")
-                partner_value_cant_provide = st.text_area("What would partners value that you can't easily provide today?", value=part4a.get('partner_value_cant_provide',''), key=f"{selected_owner}-partner_value_cant_provide")
-                
-                st.markdown("---")
-                st.markdown("**Section B: Partner Confidence & Trust**")
-                partner_confidence_builders = st.text_area("What builds partner confidence in Nuton's technology?", value=part4b.get('partner_confidence_builders',''), key=f"{selected_owner}-partner_confidence_builders")
-                partner_concerns = st.text_area("What concerns or questions do partners have?", value=part4b.get('partner_concerns',''), key=f"{selected_owner}-partner_concerns")
-                partner_demonstrate_data_led = st.text_area("How could Nuton better demonstrate 'data-led' capability to partners?", value=part4b.get('partner_demonstrate_data_led',''), key=f"{selected_owner}-partner_demonstrate_data_led")
-            
-            with st.expander("Part 5: Ideal Future State - Business Requirements", expanded=False):
-                st.markdown("**Section A: Prioritization Discussion**")
-                priority_biggest_impact = st.text_area("If you could improve one thing, what would have the biggest business impact?", value=part5a.get('priority_biggest_impact',''), key=f"{selected_owner}-priority_biggest_impact")
-                priority_why = st.text_area("Why that one?", value=part5a.get('priority_why',''), key=f"{selected_owner}-priority_why")
-                priority_impact_detail = st.text_area("What would the impact be? (time saved, quality improved, etc.)", value=part5a.get('priority_impact_detail',''), key=f"{selected_owner}-priority_impact_detail")
-                priority_frequency = st.text_area("How often would it help?", value=part5a.get('priority_frequency',''), key=f"{selected_owner}-priority_frequency")
-                priority_prevents_faster = st.text_area("What prevents you from delivering faster with partners?", value=part5a.get('priority_prevents_faster',''), key=f"{selected_owner}-priority_prevents_faster")
-                priority_partner_difference = st.text_area("What would make the biggest difference to partner confidence or satisfaction?", value=part5a.get('priority_partner_difference',''), key=f"{selected_owner}-priority_partner_difference")
-                
-                st.markdown("---")
-                st.markdown("**Section B: Vision Discussion (12-18 months from now)**")
-                st.markdown("*Imagine the Predict platform is working beautifully for you...*")
-                vision_day_to_day = st.text_area("What does your day-to-day work look like?", value=part5b.get('vision_day_to_day',''), key=f"{selected_owner}-vision_day_to_day")
-                vision_can_do_new = st.text_area("What can you do that you can't do today?", value=part5b.get('vision_can_do_new',''), key=f"{selected_owner}-vision_can_do_new")
-                vision_decisions_faster = st.text_area("What decisions can you make faster or better?", value=part5b.get('vision_decisions_faster',''), key=f"{selected_owner}-vision_decisions_faster")
-                vision_partner_delivery_changed = st.text_area("How has partner delivery changed?", value=part5b.get('vision_partner_delivery_changed',''), key=f"{selected_owner}-vision_partner_delivery_changed")
-                st.markdown("**Information access**")
-                vision_information_access = st.text_area("What information do you have access to that you don't today?", value=part5b.get('vision_information_access',''), key=f"{selected_owner}-vision_information_access")
-                vision_questions_answer = st.text_area("What questions can you answer?", value=part5b.get('vision_questions_answer',''), key=f"{selected_owner}-vision_questions_answer")
-                vision_answer_speed = st.text_area("How quickly can you get answers?", value=part5b.get('vision_answer_speed',''), key=f"{selected_owner}-vision_answer_speed")
-                vision_information_confidence = st.text_area("How confident are you in the information?", value=part5b.get('vision_information_confidence',''), key=f"{selected_owner}-vision_information_confidence")
-                st.markdown("**Workflow changes**")
-                vision_workflow_changed = st.text_area("How has your workflow changed?", value=part5b.get('vision_workflow_changed',''), key=f"{selected_owner}-vision_workflow_changed")
-                vision_manual_steps_gone = st.text_area("What manual steps are gone?", value=part5b.get('vision_manual_steps_gone',''), key=f"{selected_owner}-vision_manual_steps_gone")
-                vision_whats_faster = st.text_area("What's faster?", value=part5b.get('vision_whats_faster',''), key=f"{selected_owner}-vision_whats_faster")
-                vision_whats_easier = st.text_area("What's easier?", value=part5b.get('vision_whats_easier',''), key=f"{selected_owner}-vision_whats_easier")
-                vision_whats_reliable = st.text_area("What's more reliable?", value=part5b.get('vision_whats_reliable',''), key=f"{selected_owner}-vision_whats_reliable")
-                st.markdown("**Partner experience**")
-                vision_partner_experience_faster = st.text_area("What's faster from partner perspective?", value=part5b.get('vision_partner_experience_faster',''), key=f"{selected_owner}-vision_partner_experience_faster")
-                vision_partner_confidence = st.text_area("What builds their confidence?", value=part5b.get('vision_partner_confidence',''), key=f"{selected_owner}-vision_partner_confidence")
-                vision_partner_access = st.text_area("What do they have access to that they don't today?", value=part5b.get('vision_partner_access',''), key=f"{selected_owner}-vision_partner_access")
-                
-                st.markdown("---")
-                st.markdown("**Section C: Capability Requirements**")
-                capability_requirements = st.text_area("What capabilities must the Predict platform provide? (I need to be able to...)", value=part5c.get('capability_requirements',''), key=f"{selected_owner}-capability_requirements")
-                capability_fast_enough = st.text_area("What would 'fast enough' look like? (timeline requirements)", value=part5c.get('capability_fast_enough',''), key=f"{selected_owner}-capability_fast_enough")
-                capability_quality_requirements = st.text_area("What would 'good enough' quality look like? (accuracy, confidence, validation)", value=part5c.get('capability_quality_requirements',''), key=f"{selected_owner}-capability_quality_requirements")
-            
-            with st.expander("Part 6: Wrap-Up (5m)", expanded=False):
-                st.markdown("**Summarization and Validation**")
-                summary_validation = st.text_area("Summary validation - Did I get that right?", value=part6.get('summary_validation',''), key=f"{selected_owner}-summary_validation")
-                summary_missed = st.text_area("What did I miss?", value=part6.get('summary_missed',''), key=f"{selected_owner}-summary_missed")
-                summary_most_important = st.text_area("What's most important?", value=part6.get('summary_most_important',''), key=f"{selected_owner}-summary_most_important")
-                summary_critical_not_discussed = st.text_area("Is there anything critical we haven't talked about?", value=part6.get('summary_critical_not_discussed',''), key=f"{selected_owner}-summary_critical_not_discussed")
-                summary_ensure_understanding = st.text_area("Anything you want to make sure we understand?", value=part6.get('summary_ensure_understanding',''), key=f"{selected_owner}-summary_ensure_understanding")
-            
-            submitted = st.form_submit_button("Save Business Owner Session")
-            if submitted:
-                owner_data = {
-                    'owner_name': selected_owner,
-                    'products_covered': [p['product_name'] for p in products_for_owner],
-                    'part1_context_business_process': {
-                        'context_role': context_role,
-                        'context_stages': context_stages,
-                        'context_decisions': context_decisions,
-                        'context_deliverables': context_deliverables,
-                        'context_workflow': context_workflow,
-                        'context_steps': context_steps,
-                        'context_info_needed': context_info_needed,
-                        'context_decision_points': context_decision_points,
-                        'context_partner_impact': context_partner_impact,
-                        'context_partner_confidence': context_partner_confidence,
-                        'context_partner_frustration': context_partner_frustration
-                    },
-                    'part2_product_portfolio_review': {
-                        'section_a_business_owner': {
-                            'product_purpose': product_purpose,
-                            'product_why_created': product_why_created,
-                            'product_what_achieve': product_what_achieve,
-                            'product_impact_works_well': product_impact_works_well,
-                            'product_impact_doesnt_work': product_impact_doesnt_work,
-                            'product_time_impact': product_time_impact,
-                            'product_quality_decisions': product_quality_decisions,
-                            'product_partner_confidence': product_partner_confidence
-                        },
-                        'section_b_users': {
-                            'b1_use_overview': {
-                                'use_purpose': use_purpose,
-                                'use_frequency': use_frequency,
-                                'use_who_else': use_who_else,
-                                'use_workflow_stage': use_workflow_stage,
-                                'use_critical_path': use_critical_path,
-                                'use_decisions': use_decisions,
-                                'use_decision_explanation': use_decision_explanation,
-                                'use_critical_decisions': use_critical_decisions,
-                                'use_confidence_outputs': use_confidence_outputs,
-                                'use_decisions_without_product': use_decisions_without_product,
-                                'use_why_not_direct': use_why_not_direct
-                            },
-                            'b2_pain_points_gaps': {
-                                'pain_frustrations': pain_frustrations,
-                                'pain_slowdowns': pain_slowdowns,
-                                'pain_extra_work': pain_extra_work,
-                                'pain_rework_errors': pain_rework_errors,
-                                'pain_unsupported_needs': pain_unsupported_needs,
-                                'pain_content_quality': pain_content_quality,
-                                'pain_timeline': pain_timeline,
-                                'pain_usability': pain_usability,
-                                'pain_missing_info': pain_missing_info,
-                                'pain_missing_decisions': pain_missing_decisions,
-                                'pain_manual_work': pain_manual_work,
-                                'pain_workarounds': pain_workarounds,
-                                'pain_time_added': pain_time_added,
-                                'pain_why_necessary': pain_why_necessary
-                            }
-                        }
-                    },
-                    'part3_cross_product_process': {
-                        'section_a_integration': {
-                            'integration_products_work_together': integration_products_work_together,
-                            'integration_manual_data_movement': integration_manual_data_movement,
-                            'integration_gaps': integration_gaps,
-                            'integration_combine_info': integration_combine_info,
-                            'integration_how_combine': integration_how_combine,
-                            'integration_time_to_combine': integration_time_to_combine,
-                            'integration_error_prone': integration_error_prone,
-                            'integration_outside_products': integration_outside_products,
-                            'integration_outside_fit': integration_outside_fit
-                        },
-                        'section_b_bottlenecks': {
-                            'bottleneck_where_slows': bottleneck_where_slows,
-                            'bottleneck_waiting_info': bottleneck_waiting_info,
-                            'bottleneck_manual_steps': bottleneck_manual_steps,
-                            'bottleneck_rework': bottleneck_rework,
-                            'bottleneck_handoffs': bottleneck_handoffs,
-                            'bottleneck_takes_longer': bottleneck_takes_longer,
-                            'bottleneck_why_long': bottleneck_why_long,
-                            'bottleneck_faster_look_like': bottleneck_faster_look_like,
-                            'bottleneck_partner_delays': bottleneck_partner_delays,
-                            'bottleneck_partner_waiting': bottleneck_partner_waiting,
-                            'bottleneck_partner_frustrations': bottleneck_partner_frustrations
-                        }
-                    },
-                    'part4_partner_delivery': {
-                        'section_a_info_needs': {
-                            'partner_info_needs': partner_info_needs,
-                            'partner_info_frequency': partner_info_frequency,
-                            'partner_info_format': partner_info_format,
-                            'partner_delivery_method': partner_delivery_method,
-                            'partner_delivery_time': partner_delivery_time,
-                            'partner_delivery_automated': partner_delivery_automated,
-                            'partner_value_cant_provide': partner_value_cant_provide
-                        },
-                        'section_b_confidence_trust': {
-                            'partner_confidence_builders': partner_confidence_builders,
-                            'partner_concerns': partner_concerns,
-                            'partner_demonstrate_data_led': partner_demonstrate_data_led
-                        }
-                    },
-                    'part5_ideal_future_state': {
-                        'section_a_prioritization': {
-                            'priority_biggest_impact': priority_biggest_impact,
-                            'priority_why': priority_why,
-                            'priority_impact_detail': priority_impact_detail,
-                            'priority_frequency': priority_frequency,
-                            'priority_prevents_faster': priority_prevents_faster,
-                            'priority_partner_difference': priority_partner_difference
-                        },
-                        'section_b_vision': {
-                            'vision_day_to_day': vision_day_to_day,
-                            'vision_can_do_new': vision_can_do_new,
-                            'vision_decisions_faster': vision_decisions_faster,
-                            'vision_partner_delivery_changed': vision_partner_delivery_changed,
-                            'vision_information_access': vision_information_access,
-                            'vision_questions_answer': vision_questions_answer,
-                            'vision_answer_speed': vision_answer_speed,
-                            'vision_information_confidence': vision_information_confidence,
-                            'vision_workflow_changed': vision_workflow_changed,
-                            'vision_manual_steps_gone': vision_manual_steps_gone,
-                            'vision_whats_faster': vision_whats_faster,
-                            'vision_whats_easier': vision_whats_easier,
-                            'vision_whats_reliable': vision_whats_reliable,
-                            'vision_partner_experience_faster': vision_partner_experience_faster,
-                            'vision_partner_confidence': vision_partner_confidence,
-                            'vision_partner_access': vision_partner_access
-                        },
-                        'section_c_capabilities': {
-                            'capability_requirements': capability_requirements,
-                            'capability_fast_enough': capability_fast_enough,
-                            'capability_quality_requirements': capability_quality_requirements
-                        }
-                    },
-                    'part6_wrapup': {
-                        'summary_validation': summary_validation,
-                        'summary_missed': summary_missed,
-                        'summary_most_important': summary_most_important,
-                        'summary_critical_not_discussed': summary_critical_not_discussed,
-                        'summary_ensure_understanding': summary_ensure_understanding
-                    }
-                }
-                save_business_owner_data(selected_owner, owner_data)
-                st.success(f"Business Owner data saved for {selected_owner} ✅")
-                st.rerun()
-
     elif page == 'Export Backup':
         st.header("Backup & Restore")
         aggregated = load_aggregated_data()
@@ -1917,8 +1498,8 @@ def main():
                     content = uploaded.read().decode("utf-8")
                     data = json.loads(content)
                     # Basic validation
-                    if not isinstance(data, dict) or 'products' not in data or 'business_owners' not in data:
-                        st.error("Invalid backup format: expected keys 'products' and 'business_owners'.")
+                    if not isinstance(data, dict) or 'products' not in data:
+                        st.error("Invalid backup format: expected key 'products'.")
                     else:
                         save_aggregated_data(data)
                         st.success("Backup restored to aggregated.json")
